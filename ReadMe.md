@@ -6,10 +6,12 @@
 # 3D
   - [x] Bevy
 # 数据处理
-  - [ ] ndarray
-  - [ ] ndarray-linalg
-  - [ ] ndarray-stats
-  - [ ] ndarray-rand
+  - [x] ndarray
+  - ~~ndarray-linalg~~
+  - ~~ndarray-stats~~
+  - ~~ndarray-rand~~
+  - [x] rand
+  - [x] rand_distr
   - [ ] nalgebra
   - [ ] argmin
   - [ ] rustfft
@@ -45,3 +47,7 @@
 # 错误处理
   - [ ] anyhow
   - [ ] thiserror
+# 数据库
+  - [ ] redb(KV型)
+  - [ ] turso(关系型)
+  - [ ] Qdrant(向量型)
