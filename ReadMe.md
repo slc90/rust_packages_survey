@@ -12,27 +12,27 @@
   - ~~ndarray-rand~~
   - [x] rand
   - [x] rand_distr
-  - [ ] nalgebra
-  - [ ] argmin
-  - [ ] rustfft
-  - [ ] plotters
-  - [ ] polars
+  - [x] nalgebra 用于低维,物理和CG
+  - [x] argmin
+  - ~~rustfft~~
+  - [x] plotters
+  - [x] polars
 # Image
-  - [ ] image
+  - [x] image
 # Audio
-  - [ ] cpal
+  - [x] cpal
 # 异步和并行
-  - [ ] tokio
-  - [ ] smol
-  - [ ] rayon
+  - [x] tokio 功能全，重，侧重互联网企业级应用
+  - [x] smol 轻量，异步消息方便
+  - [x] rayon
 # 日志
-  - [ ] tracing
-  - [ ] log4rs
+  - [x] tracing 和tokio一起用,重,结构化,异步
+  - [x] log4rs 可配置,像传统的python/C#的记日志方式
 # 配置
   - [ ] serde
   - [ ] serde_json
   - [ ] serde_yaml
-  - [ ] toml
+  - [x] toml
 # 深度学习
   - [ ] candle
   - [ ] burn
