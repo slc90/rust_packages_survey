@@ -26,11 +26,11 @@
 # Video
   - [x] gstreamer-rs 播放视频
 # 异步和并行
-  - ~~tokio 功能全，重，侧重互联网企业级应用~~
+  - ~~tokio~~ 功能全，重，侧重互联网企业级应用
   - [x] smol 轻量，异步消息方便
   - [x] rayon
 # 日志
-  - ~~tracing 和tokio一起用,重,结构化,异步~~
+  - ~~tracing~~ 和tokio一起用,重,结构化,异步
   - [x] log4rs 可配置,像传统的python/C#的记日志方式
 # 配置
   - [x] serde
@@ -48,7 +48,7 @@
   - [x] mockall 对trait进行Mock
   - [x] rust-pretty-assertions
   - [x] proptest 自动生成测试用例
-  - [x] Tarpaulin Code Coverage
+  - [x] tarpaulin Code Coverage
   - [x] criterion benchmark
 # 错误处理
   - [x] anyhow
@@ -62,3 +62,7 @@
   - [x] walkdir
   - [x] glob
   - [x] csv
+  - [x] printpdf
+  - [x] docx-rs
+  - [x] dicom-rs
+  - [x] nifti
