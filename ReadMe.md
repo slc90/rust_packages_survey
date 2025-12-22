@@ -4,8 +4,8 @@
   - [x] gpui
   - [x] gpui-component
 # 3D
-  - [x] Bevy 游戏引擎,只能单独使用
-  - [x] rend3 只渲染,可以尝试嵌入到gpui中
+  - [x] Bevy 游戏引擎,只能单独使用,也可以用来做GUI
+  - ~~rend3 只渲染,可以尝试嵌入到gpui中,想用于医学影像没什么优势~~
   - ~~利用gpui的backend手搓3D,理论可以,但不现实~~
 # 数据处理
   - [x] ndarray
@@ -16,7 +16,7 @@
   - [x] rand_distr
   - [x] nalgebra 用于低维,物理和CG
   - [x] argmin
-  - ~~rustfft~~
+  - [x] rustfft
   - [x] plotters
   - [x] polars
 # Image
@@ -66,3 +66,6 @@
   - [x] docx-rs
   - [x] dicom-rs
   - [x] nifti
+  - [x] edfplus
+# llm
+  - [x] rig 用于构建和llm相关的功能,不是训练和推理框架
