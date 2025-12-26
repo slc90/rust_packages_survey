@@ -1,11 +1,11 @@
 各种rust包的调研
 # GUI
   - ~~egui~~ 即时模式,只适合用来写一些小工具
-  - [x] gpui 不好嵌入3D相关，用来做不带3D的GUI；https://github.com/Far-Beyond-Pulsar/Pulsar-Native 在这个仓库中使用了一种把gpui和bevy结合起来的办法
-  - [x] gpui-component
+  - ~~gpui~~ 不好嵌入3D相关，用来做不带3D的GUI；https://github.com/Far-Beyond-Pulsar/Pulsar-Native 在这个仓库中使用了一种把gpui和bevy结合起来的办法
+  - ~~gpui-component~~
 # 3D
   - [x] Bevy 游戏引擎,单独使用,也能做GUI，等出了自带的UI系统和编辑器会更方便
-  - ~~rend3 只渲染,可以尝试嵌入到gpui中,想用于医学影像没什么优势~~
+  - ~~rend3~~ 只渲染,可以尝试嵌入到gpui中,想用于医学影像没什么优势
   - ~~利用gpui的backend手搓3D,理论可以,但不现实~~
 # 数据处理
   - [x] ndarray
@@ -36,6 +36,7 @@
   - [x] serde
   - [x] serde_json
   - [x] serde_yaml
+  - [x] toml
 # 深度学习
   - [x] candle
   - ~~burn~~ 全面,重,支持多backend当前意义不大
