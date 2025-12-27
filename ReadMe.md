@@ -69,3 +69,5 @@
   - [x] edfplus
 # llm
   - [x] rig 用于构建和llm相关的功能,不是训练和推理框架
+# 服务器
+  - [x] axum
