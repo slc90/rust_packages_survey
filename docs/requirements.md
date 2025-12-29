@@ -2,7 +2,7 @@
 * [x] 初始化工程，使用bevy作为GUI框架
 * [x] 修改编译配置，更快的dev编译速度，更强的release运行性能
 * [x] 修改启动配置，dev使用bevy的dynamic link，release保持不变
-* [ ] linter配置
+* [x] linter配置
 * [ ] formatter配置
 * [ ] workspace
 * [ ] 测试
