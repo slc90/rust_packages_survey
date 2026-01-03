@@ -8,3 +8,5 @@
   * https://doc.rust-lang.org/stable/clippy/index.html
 ## rustfmt
   * https://rust-lang.github.io/rustfmt/?version=v1.8.0&search=
+## workspace
+  * https://doc.rust-lang.org/cargo/reference/workspaces.html

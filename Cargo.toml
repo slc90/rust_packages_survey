@@ -1,15 +1,20 @@
-[package]
-name = "rust_packages_survey"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = [
+    "entry",
+    "utils",
+]
+resolver = "2"
 
-[dependencies]
-bevy = { version = "0.17.3" }
-log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
+[workspace.package]
+edition = "2024"
+authors = [""]
+license = ""
+description = "Rust packages survey project"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
+incremental = true
 
 # Enable a large amount of optimization in the dev profile for dependencies.
 [profile.dev.package."*"]

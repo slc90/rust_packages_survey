@@ -4,7 +4,7 @@
 * [x] 修改启动配置，dev使用bevy的dynamic link，release保持不变
 * [x] linter配置
 * [x] formatter配置
-* [ ] workspace
+* [x] workspace
 * [ ] 测试
 * [ ] CI/CD
 * [ ] log
