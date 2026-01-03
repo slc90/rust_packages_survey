@@ -10,3 +10,5 @@
   * https://rust-lang.github.io/rustfmt/?version=v1.8.0&search=
 ## workspace
   * https://doc.rust-lang.org/cargo/reference/workspaces.html
+## rstest
+  * https://docs.rs/rstest

@@ -5,7 +5,7 @@
 * [x] linter配置
 * [x] formatter配置
 * [x] workspace
-* [ ] 测试
+* [x] 测试
 * [ ] CI/CD
 * [ ] log
 * [ ] 自定义TitleBar

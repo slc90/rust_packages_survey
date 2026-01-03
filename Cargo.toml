@@ -11,6 +11,9 @@ authors = [""]
 license = ""
 description = "Rust packages survey project"
 
+[workspace.dependencies]
+rstest = "0.26.1"
+
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
