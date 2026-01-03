@@ -1,0 +1,71 @@
+# rustfmt.toml - Rust 代码格式化配置文件（稳定版兼容）
+# 此文件仅使用 rustfmt 稳定版支持的特性
+# 保存后运行 `cargo fmt` 即可应用配置
+
+# ============================================
+# 基础格式设置
+# ============================================
+
+# 最大行宽（字符数），默认 100
+# 超过此宽度的行会被自动换行
+max_width = 100
+
+# Use tab characters for indentation, spaces for alignment
+hard_tabs = true
+
+# 缩进使用的空格数，默认 4
+# 大多数 Rust 项目使用 4 个空格缩进
+tab_spaces = 4
+
+# 换行符风格，可选值:
+# - "Auto": 自动检测
+# - "Unix": \n (Linux/macOS)
+# - "Windows": \r\n (Windows)
+# - "Native": 使用当前系统风格
+newline_style = "Auto"
+
+# 格式化启发式策略，影响如何决定代码块是否应该换行
+# 可选值: "Default", "Off", "Max"
+# "Max" 会尽可能多地使用垂直空间
+use_small_heuristics = "Default"
+
+# ============================================
+# 导入和模块设置
+# ============================================
+
+# 是否对导入语句进行重新排序
+# true: 按字母顺序排序导入
+reorder_imports = true
+
+# 是否对模块声明进行重新排序
+reorder_modules = true
+
+# ============================================
+# 函数和方法设置
+# ============================================
+
+# 函数参数布局，可选值:
+# - "Tall": 每个参数单独一行（如果参数多）
+# - "Compressed": 尽可能压缩到一行
+# - "Default": 自动决定
+# 注意: fn_args_layout 已弃用，使用 fn_params_layout 代替
+fn_params_layout = "Tall"
+
+# 是否使用字段初始化简写语法
+# 例如: Point { x: x, y: y } 可以简写为 Point { x, y }
+use_field_init_shorthand = false
+
+# ============================================
+# 控制流和结构
+# ============================================
+
+# 是否移除多余的嵌套括号
+remove_nested_parens = true
+
+# ============================================
+# 高级选项
+# ============================================
+
+# 是否合并多个 derive 属性
+# 例如: #[derive(Debug)] #[derive(Clone)] 合并为 #[derive(Debug, Clone)]
+merge_derives = true
