@@ -4,7 +4,7 @@ on:
   push:
     tags:
       # 匹配 v1.0.0, v2.3.4 等格式的标签
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+\\.[0-9]+\\.[0-9]+"
 
 env:
   CARGO_TERM_COLOR: never
@@ -50,9 +50,6 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace --verbose
-
-      - name: Build release
-        run: cargo build --workspace --release
 
   build-windows:
     name: Build Windows Release
@@ -107,6 +104,14 @@ jobs:
         with:
           name: survey-windows-x86_64.exe
           path: ./artifacts
+          merge-multiple: true
+
+      - name: Inspect artifacts
+        run: |
+          echo "PWD:"
+          pwd
+          echo "Artifacts tree:"
+          ls -R artifacts
 
       - name: Extract version from tag
         id: extract_version
