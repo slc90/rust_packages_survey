@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    # 忽略所有 tag push
+    tags-ignore:
+      - "*"
 
 env:
   # 用来控制终端输出是否使用颜色
