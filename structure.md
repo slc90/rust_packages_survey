@@ -5,6 +5,10 @@ rust_packages_survey/
 │   └── config.toml                         # 链接器配置
 ├── .zed/                                   # Zed编辑器配置
 │   └── tasks.json                          # 任务定义文件
+├── .github/                                # GitHub配置
+│   └── workflows/                          # CI/CD工作流
+│       ├── ci.yml                          # 持续集成配置
+│       └── release.yml                     # 发布流程配置
 ├── docs/                                   # 项目文档
 │   ├── helpers.md                          # 辅助文档记录
 │   └── requirements.md                     # 功能需求列表

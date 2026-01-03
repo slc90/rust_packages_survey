@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      # 匹配 v1.0.0, v2.3.4 等格式的标签
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  CARGO_TERM_COLOR: never
+  RUST_BACKTRACE: "full"
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  verify:
+    name: Verify Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: windows-cargo-registry-
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: windows-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: windows-cargo-build-
+
+      - name: Verify formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features
+
+      - name: Run tests
+        run: cargo test --workspace --verbose
+
+      - name: Build release
+        run: cargo build --workspace --release
+
+  build-windows:
+    name: Build Windows Release
+    runs-on: windows-latest
+    needs: verify
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: windows-cargo-registry-
+
+      - name: Build release binary
+        run: |
+          cargo build --release --target x86_64-pc-windows-msvc --verbose -p entry
+          # 检查构建产物是否存在
+          if (Test-Path "target/x86_64-pc-windows-msvc/release/entry.exe") {
+            echo "Build successful"
+          } else {
+            echo "Build failed: exe not found"
+            exit 1
+          }
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: survey-windows-x86_64.exe
+          path: target/x86_64-pc-windows-msvc/release/entry.exe
+          retention-days: 7
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: windows-latest
+    needs: build-windows
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: survey-windows-x86_64.exe
+          path: ./artifacts
+
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          $tagName = $env:GITHUB_REF -replace 'refs/tags/', ''
+          $version = $tagName -replace '^v', ''
+          echo "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.extract_version.outputs.version }}
+          tag_name: ${{ steps.extract_version.outputs.tag_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: artifacts/survey-windows-x86_64.exe

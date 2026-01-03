@@ -6,7 +6,7 @@
 * [x] formatter配置
 * [x] workspace
 * [x] 测试
-* [ ] CI/CD
+* [x] CI/CD
 * [ ] log
 * [ ] 自定义TitleBar
   * [ ] logo在最左侧
