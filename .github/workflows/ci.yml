@@ -22,10 +22,10 @@ jobs:
     if: github.ref_type == 'branch'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -39,7 +39,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: target
           key: windows-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
