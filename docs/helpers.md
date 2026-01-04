@@ -12,3 +12,6 @@
   * https://doc.rust-lang.org/cargo/reference/workspaces.html
 ## rstest
   * https://docs.rs/rstest
+## GitHub Actions
+  * https://docs.github.com/actions
+  * https://docs.github.com/actions/learn-github-actions
