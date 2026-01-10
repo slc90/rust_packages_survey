@@ -7,7 +7,7 @@
 * [x] workspace
 * [x] 测试
 * [x] CI/CD
-* [ ] log
+* [x] log
 * [ ] 自定义TitleBar
   * [ ] logo在最左侧
   * [ ] 然后是Menu

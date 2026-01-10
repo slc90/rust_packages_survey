@@ -15,3 +15,9 @@
 ## GitHub Actions
   * https://docs.github.com/actions
   * https://docs.github.com/actions/learn-github-actions
+## bevy_log
+  * https://docs.rs/bevy/latest/bevy/log/struct.LogPlugin.html
+  * https://github.com/bevyengine/bevy/blob/main/crates/bevy_log/src/lib.rs
+  * https://github.com/bevyengine/bevy/issues/5233
+  * https://github.com/bevyengine/bevy/pull/13159
+  * https://docs.rs/tracing-appender/latest/tracing_appender/

@@ -30,8 +30,10 @@
   - [x] smol 轻量，异步消息方便
   - [x] rayon
 # 日志
-  - ~~tracing~~ 和tokio一起用,重,结构化,异步
-  - [x] log4rs 可配置,像传统的python/C#的记日志方式
+  - [x] tracing 
+    * ~~和tokio一起用,重,结构化,异步~~
+    * bevy自带的log就是tracing,和tokio解耦
+  - ~~log4rs~~ 可配置,像传统的python/C#的记日志方式
 # 配置
   - [x] serde
   - [x] serde_json

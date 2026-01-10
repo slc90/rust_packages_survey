@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "entry",
+    "logger",
     "utils",
 ]
 resolver = "2"
