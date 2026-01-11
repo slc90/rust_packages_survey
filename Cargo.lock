@@ -2165,6 +2165,7 @@ dependencies = [
  "bevy",
  "logger",
  "rstest",
+ "ui",
  "utils",
 ]
 
@@ -4671,6 +4672,14 @@ name = "typewit"
 version = "1.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
+
+[[package]]
+name = "ui"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "logger",
+]
 
 [[package]]
 name = "unicode-bidi"

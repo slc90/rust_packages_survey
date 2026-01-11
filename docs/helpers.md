@@ -21,3 +21,7 @@
   * https://github.com/bevyengine/bevy/issues/5233
   * https://github.com/bevyengine/bevy/pull/13159
   * https://docs.rs/tracing-appender/latest/tracing_appender/
+## 拖动自定义窗口
+  * https://github.com/bevyengine/bevy/blob/main/examples/window/window_drag_move.rs
+## Icon
+  * https://feathericons.com/

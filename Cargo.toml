@@ -3,6 +3,7 @@ members = [
     "entry",
     "logger",
     "utils",
+    "ui",
 ]
 resolver = "2"
 
