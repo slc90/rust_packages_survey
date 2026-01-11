@@ -1,3 +1,5 @@
+// 隐藏 Windows 控制台窗口，让程序作为纯 GUI 应用运行
+#![cfg_attr(windows, windows_subsystem = "windows")]
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 
