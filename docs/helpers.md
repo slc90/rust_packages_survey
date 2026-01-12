@@ -25,3 +25,6 @@
   * https://github.com/bevyengine/bevy/blob/main/examples/window/window_drag_move.rs
 ## Icon
   * https://feathericons.com/
+## Embedded Assets
+  * https://docs.rs/bevy/latest/bevy/asset/macro.embedded_asset.html
+  * https://bevy.org/examples/assets/embedded-asset/

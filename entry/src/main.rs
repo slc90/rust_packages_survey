@@ -4,10 +4,13 @@
 #![deny(clippy::expect_used)]
 
 use bevy::{
-	asset::{UnapprovedPathMode, load_internal_binary_asset},
 	log::{Level, LogPlugin},
 	prelude::*,
 	window::WindowResolution,
+};
+use embedded_assets::{
+	const_assets_path::{CLOSE_ICON, LOGO, MAXIMIZE_ICON, MINIMIZE_ICON},
+	plugin::EmbeddedAssetPlugin,
 };
 use logger::{custom_layer, fmt_layer};
 use ui::title_bar::{
@@ -20,6 +23,7 @@ use ui::title_bar::{
 
 fn main() {
 	let mut app = App::new();
+	//修改默认Plugin
 	app.add_plugins(
 		DefaultPlugins
 			.set(LogPlugin {
@@ -40,29 +44,10 @@ fn main() {
 					..default()
 				}),
 				..default()
-			})
-			.set(AssetPlugin {
-				file_path: "../".to_string(), // 指向项目根目录
-				unapproved_path_mode: UnapprovedPathMode::Allow,
-				..default()
 			}),
 	);
-
-	// 加载全局默认字体
-	// This needs to happen after `DefaultPlugins` is added.
-	load_internal_binary_asset!(
-		app,
-		TextFont::default().font,
-		"../../assets/SmileySans-Oblique.ttf",
-		|bytes: &[u8], _path: String| {
-			match Font::try_from_bytes(bytes.to_vec()) {
-				Ok(result) => result,
-				Err(e) => {
-					panic!("未能加载字体:{}", e)
-				}
-			}
-		}
-	);
+	// 所有嵌入资源
+	app.add_plugins(EmbeddedAssetPlugin);
 	// 自定义标题栏插件
 	app.add_plugins(TitleBarPlugin);
 	app.add_systems(Startup, setup);
@@ -78,31 +63,28 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 		BackgroundColor(Color::WHITE),
 		children![
 			// 添加应用Logo
-			TitleBarLogoBundle::new(asset_server.load("assets/logo.png"), 24.0),
+			TitleBarLogoBundle::new(asset_server.load(LOGO), 24.0),
 			// 添加标题文本
-			(
-				TitleBarTextBundle::new("Rust Packages Survey"),
-				TextColor::BLACK
-			),
+			(TitleBarTextBundle::new("Rust包调研"), TextColor::BLACK),
 			// 添加填充区域
 			TitleBarPlaceholderBundle::flexible(),
 			// 最小化按钮
 			TitleBarButtonBundle::new(
 				TitleBarButtonEnum::Minimize,
 				24.0,
-				asset_server.load("assets/minimize.png"),
+				asset_server.load(MINIMIZE_ICON),
 			),
 			// 最大化按钮
 			TitleBarButtonBundle::new(
 				TitleBarButtonEnum::Maximize,
 				24.0,
-				asset_server.load("assets/maximize.png"),
+				asset_server.load(MAXIMIZE_ICON),
 			),
 			// 关闭按钮
 			TitleBarButtonBundle::new(
 				TitleBarButtonEnum::Close,
 				24.0,
-				asset_server.load("assets/close.png"),
+				asset_server.load(CLOSE_ICON),
 			)
 		],
 	));

@@ -8,9 +8,9 @@ description = "程序的入口"
 
 [dependencies]
 bevy = { version = "0.17.3" }
-utils = { path = "../utils" }
 logger = { path = "../logger" }
 ui = { path = "../ui" }
+embedded_assets = { path = "../embedded_assets" }
 
 [dev-dependencies]
 rstest = { workspace = true }

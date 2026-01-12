@@ -1,10 +1,10 @@
 [package]
-name = "ui"
+name = "embedded_assets"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "UI components for Rust packages survey"
+description = "把assets嵌入到程序中"
 
 [dependencies]
-bevy = "0.17.3"
+bevy = { version = "0.17.3" }

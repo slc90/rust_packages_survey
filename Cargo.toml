@@ -4,6 +4,7 @@ members = [
     "logger",
     "utils",
     "ui",
+    "embedded_assets",
 ]
 resolver = "2"
 
