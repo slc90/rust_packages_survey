@@ -1,7 +1,7 @@
 ///自动生成常量
 macro_rules! embed_with_const {
 	($const_name:ident, $path:literal) => {
-		pub const $const_name: &str = concat!("embedded://embedded_assets/", $path);
+		pub const $const_name: &str = concat!("embedded://embedded_assets/../", $path);
 	};
 }
 

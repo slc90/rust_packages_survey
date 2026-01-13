@@ -13,7 +13,7 @@ impl Plugin for EmbeddedAssetPlugin {
 		load_internal_binary_asset!(
 			app,
 			TextFont::default().font,
-			"assets/SmileySans-Oblique.ttf",
+			"../assets/SmileySans-Oblique.ttf",
 			|bytes: &[u8], _path: String| {
 				match Font::try_from_bytes(bytes.to_vec()) {
 					Ok(result) => result,
@@ -24,9 +24,9 @@ impl Plugin for EmbeddedAssetPlugin {
 			}
 		);
 		//嵌入所有的资源
-		embedded_asset!(app, "assets/logo.png");
-		embedded_asset!(app, "assets/minimize.png");
-		embedded_asset!(app, "assets/maximize.png");
-		embedded_asset!(app, "assets/close.png");
+		embedded_asset!(app, "../assets/logo.png");
+		embedded_asset!(app, "../assets/minimize.png");
+		embedded_asset!(app, "../assets/maximize.png");
+		embedded_asset!(app, "../assets/close.png");
 	}
 }
