@@ -12,6 +12,7 @@ use embedded_assets::{
 	const_assets_path::{CLOSE_ICON, LOGO, MAXIMIZE_ICON, MINIMIZE_ICON},
 	plugin::EmbeddedAssetPlugin,
 };
+use i18n::{I18nPlugin, LanguageManager, data_structure::LanguageKey};
 use logger::{custom_layer, fmt_layer};
 use ui::title_bar::{
 	components::{
@@ -50,11 +51,18 @@ fn main() {
 	app.add_plugins(EmbeddedAssetPlugin);
 	// 自定义标题栏插件
 	app.add_plugins(TitleBarPlugin);
+	// 翻译
+	app.add_plugins(I18nPlugin);
+
 	app.add_systems(Startup, setup);
 	app.run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	language_manager: Res<LanguageManager>,
+) {
 	// 生成相机用于UI渲染
 	commands.spawn(Camera2d);
 	// 创建标题栏
@@ -65,7 +73,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 			// 添加应用Logo
 			TitleBarLogoBundle::new(asset_server.load(LOGO), 24.0),
 			// 添加标题文本
-			(TitleBarTextBundle::new("Rust包调研"), TextColor::BLACK),
+			(
+				TitleBarTextBundle::new(language_manager.lookup(LanguageKey::Title)),
+				TextColor::BLACK
+			),
 			// 添加填充区域
 			TitleBarPlaceholderBundle::flexible(),
 			// 最小化按钮

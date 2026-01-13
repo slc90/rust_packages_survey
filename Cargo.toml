@@ -5,6 +5,7 @@ members = [
     "utils",
     "ui",
     "embedded_assets",
+    "i18n"
 ]
 resolver = "2"
 

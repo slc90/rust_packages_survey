@@ -1,0 +1,10 @@
+[package]
+name = "i18n"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "翻译"
+
+[dependencies]
+bevy = "0.17.3"
