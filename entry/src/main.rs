@@ -30,7 +30,7 @@ fn main() {
 				custom_layer,
 				fmt_layer,
 				level: Level::DEBUG,
-				..default()
+				filter: "warn,my_crate=debug,ui=debug".to_string(),
 			})
 			.set(WindowPlugin {
 				primary_window: Some(Window {
