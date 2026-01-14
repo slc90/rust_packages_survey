@@ -30,3 +30,8 @@
   * https://bevy.org/examples/assets/embedded-asset/
 ## git commit钩子配置
   * https://github.com/j178/prek
+## bevy中的状态控制
+  * https://docs.rs/bevy/latest/bevy/state/index.html
+## bevy的标准widgets(实验性质)
+  * https://bevy.org/examples/ui-user-interface/standard-widgets/
+  * https://docs.rs/bevy/latest/bevy/ui_widgets/index.html#warning-experimental

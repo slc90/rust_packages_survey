@@ -7,4 +7,5 @@ license.workspace = true
 description = "UI components for Rust packages survey"
 
 [dependencies]
-bevy = "0.17.3"
+bevy = { version = "0.18", features = ["experimental_bevy_ui_widgets"] }
+i18n = { path = "../i18n" }

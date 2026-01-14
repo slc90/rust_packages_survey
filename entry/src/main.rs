@@ -14,12 +14,16 @@ use embedded_assets::{
 };
 use i18n::{I18nPlugin, LanguageManager, data_structure::LanguageKey};
 use logger::{custom_layer, fmt_layer};
-use ui::title_bar::{
-	components::{
-		TitleBarBundle, TitleBarButtonBundle, TitleBarButtonEnum, TitleBarLogoBundle,
-		TitleBarPlaceholderBundle, TitleBarTextBundle,
+use ui::{
+	homepage::{common::ContentAreaMarker, plugin::HomepagePlugin},
+	menu_bar::plugin::MenuBarPlugin,
+	title_bar::{
+		components::{
+			TitleBarBundle, TitleBarButtonBundle, TitleBarButtonEnum, TitleBarLogoBundle,
+			TitleBarPlaceholderBundle, TitleBarTextBundle,
+		},
+		plugin::TitleBarPlugin,
 	},
-	plugin::TitleBarPlugin,
 };
 
 fn main() {
@@ -37,7 +41,7 @@ fn main() {
 				primary_window: Some(Window {
 					// 自定义窗口
 					decorations: false,
-					position: WindowPosition::Centered(MonitorSelection::Current),
+					position: WindowPosition::Centered(MonitorSelection::Primary),
 					//初始默认大小
 					resolution: WindowResolution::new(1920, 1080)
 						//不要受dpi影响
@@ -53,6 +57,10 @@ fn main() {
 	app.add_plugins(TitleBarPlugin);
 	// 翻译
 	app.add_plugins(I18nPlugin);
+	// 主页状态管理插件
+	app.add_plugins(HomepagePlugin);
+	// 菜单栏插件
+	app.add_plugins(MenuBarPlugin);
 
 	app.add_systems(Startup, setup);
 	app.run();
@@ -98,5 +106,20 @@ fn setup(
 				asset_server.load(CLOSE_ICON),
 			)
 		],
+	));
+	// 创建内容区域（位于标题栏下方）
+	commands.spawn((
+		ContentAreaMarker,
+		Node {
+			width: Val::Percent(100.0),
+			height: Val::Percent(100.0),
+			position_type: PositionType::Absolute,
+			top: Val::Px(40.0),
+			bottom: Val::Px(0.0),
+			left: Val::Px(0.0),
+			right: Val::Px(0.0),
+			..default()
+		},
+		BackgroundColor(Color::WHITE),
 	));
 }

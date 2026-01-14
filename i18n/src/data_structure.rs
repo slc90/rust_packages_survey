@@ -1,5 +1,7 @@
 /// 所有可用的语言
-#[derive(Debug)]
+use bevy::prelude::Reflect;
+
+#[derive(Debug, Clone, Copy, Reflect)]
 pub enum Language {
 	English,
 

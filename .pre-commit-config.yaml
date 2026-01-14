@@ -5,16 +5,19 @@ repos:
         name: cargo fmt
         entry: cargo fmt
         language: system
+        pass_filenames: false
         types: [rust]
 
       - id: cargo-clippy
         name: cargo clippy
         entry: cargo clippy --workspace --all-targets -- -D warnings
         language: system
+        pass_filenames: false
         types: [rust]
 
       - id: cargo-check
         name: cargo check
         entry: cargo check --workspace --all-targets
         language: system
+        pass_filenames: false
         types: [rust]

@@ -7,4 +7,4 @@ license.workspace = true
 description = "把assets嵌入到程序中"
 
 [dependencies]
-bevy = { version = "0.17.3" }
+bevy = { workspace = true }
