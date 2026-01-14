@@ -1,5 +1,4 @@
 use crate::menu_bar::components::*;
-use crate::menu_bar::systems::*;
 use bevy::{
 	input_focus::{InputDispatchPlugin, tab_navigation::TabNavigationPlugin},
 	prelude::*,
@@ -30,11 +29,5 @@ impl Plugin for MenuBarPlugin {
 			.register_type::<MenuButtonStyle>()
 			.register_type::<MenuPopupStyle>()
 			.register_type::<MenuItemStyle>();
-
-		// Add menu bar building system to Startup
-		app.add_systems(Startup, build_menu_bar);
-
-		// Add system to adjust content area position for menu bar
-		app.add_systems(Update, adjust_content_area_position);
 	}
 }

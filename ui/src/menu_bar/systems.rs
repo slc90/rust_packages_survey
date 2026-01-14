@@ -14,44 +14,8 @@ use bevy::{
 	},
 };
 
-/// System to build the menu bar UI
-/// Spawns the menu bar container and two menu buttons (function and language)
-pub fn build_menu_bar(mut commands: Commands) {
-	// Spawn the main menu bar container
-	commands.spawn((
-		MenuBarBundle::default(),
-		BackgroundColor(Color::srgb(0.95, 0.95, 0.95)),
-		children![
-			// Function menu button with text
-			(
-				Node {
-					padding: UiRect::all(Val::Px(8.0)),
-					border_radius: BorderRadius::all(Val::Px(4.0)),
-					..default()
-				},
-				FunctionMenuButtonBundle::default(),
-				BackgroundColor(Color::srgb(0.85, 0.85, 0.85)),
-				observe(on_function_menu_event),
-				children![(Text::new("Function"), TextColor(Color::BLACK),)],
-			),
-			// Language menu button with text
-			(
-				Node {
-					padding: UiRect::all(Val::Px(8.0)),
-					border_radius: BorderRadius::all(Val::Px(4.0)),
-					..default()
-				},
-				LanguageMenuButtonBundle::default(),
-				BackgroundColor(Color::srgb(0.85, 0.85, 0.85)),
-				observe(on_language_menu_event),
-				children![(Text::new("Language"), TextColor(Color::BLACK),)],
-			),
-		],
-	));
-}
-
 /// Handle function menu events
-fn on_function_menu_event(
+pub fn on_function_menu_event(
 	menu_event: On<MenuEvent>,
 	q_anchor: Single<(Entity, &Children), With<FunctionMenuMarker>>,
 	q_popup: Query<Entity, With<MenuPopupMarker>>,
@@ -85,7 +49,7 @@ fn on_function_menu_event(
 }
 
 /// Handle language menu events
-fn on_language_menu_event(
+pub fn on_language_menu_event(
 	menu_event: On<MenuEvent>,
 	q_anchor: Single<(Entity, &Children), With<LanguageMenuMarker>>,
 	q_popup: Query<Entity, With<MenuPopupMarker>>,
@@ -232,13 +196,25 @@ fn spawn_language_menu(anchor: Entity, mut commands: Commands) {
 	commands.entity(anchor).add_child(menu);
 }
 
-/// System to adjust content area position for menu bar
-/// Moves content area below both title bar and menu bar
-pub fn adjust_content_area_position(
-	mut content_areas: Query<&mut Node, With<crate::homepage::common::ContentAreaMarker>>,
-) {
-	for mut node in content_areas.iter_mut() {
-		// Title bar is 40px, menu bar is 40px, so total offset is 80px
-		node.top = Val::Px(80.0);
-	}
+/// Returns a bundle that can be used as a component within a title bar
+/// Creates a complete menu bar with both function and language dropdowns
+pub fn build_menu_bar() -> impl Bundle {
+	(
+		MenuBarBundle::inline(),
+		BackgroundColor(Color::srgb(0.95, 0.95, 0.95)),
+		children![
+			// Function menu button with text
+			(
+				FunctionMenuButtonBundle::default(),
+				observe(on_function_menu_event),
+				children![(Text::new("Function"), TextColor(Color::BLACK),)],
+			),
+			// Language menu button with text
+			(
+				LanguageMenuButtonBundle::default(),
+				observe(on_language_menu_event),
+				children![(Text::new("Language"), TextColor(Color::BLACK),)],
+			),
+		],
+	)
 }

@@ -211,6 +211,28 @@ impl Default for MenuBarBundle {
 	}
 }
 
+impl MenuBarBundle {
+	/// Creates a menu bar bundle suitable for inline placement within a title bar
+	/// Removes absolute positioning and uses relative layout for flex containers
+	pub fn inline() -> Self {
+		let style = MenuBarStyle::default();
+		Self {
+			node: Node {
+				width: Val::Percent(100.0),
+				height: Val::Px(style.height),
+				flex_direction: FlexDirection::Row,
+				align_items: AlignItems::Center,
+				padding: style.padding,
+				column_gap: Val::Px(style.spacing),
+				position_type: PositionType::Relative,
+				..default()
+			},
+			menu_bar_marker: MenuBarMarker,
+			style,
+		}
+	}
+}
+
 /// Bundle for spawning a menu button
 /// Contains all components needed for a functional menu button using Bevy's MenuButton
 #[derive(Bundle)]

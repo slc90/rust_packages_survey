@@ -16,7 +16,7 @@ use i18n::{I18nPlugin, LanguageManager, data_structure::LanguageKey};
 use logger::{custom_layer, fmt_layer};
 use ui::{
 	homepage::{common::ContentAreaMarker, plugin::HomepagePlugin},
-	menu_bar::plugin::MenuBarPlugin,
+	menu_bar::{plugin::MenuBarPlugin, systems::build_menu_bar},
 	title_bar::{
 		components::{
 			TitleBarBundle, TitleBarButtonBundle, TitleBarButtonEnum, TitleBarLogoBundle,
@@ -85,6 +85,8 @@ fn setup(
 				TitleBarTextBundle::new(language_manager.lookup(LanguageKey::Title)),
 				TextColor::BLACK
 			),
+			// 添加菜单栏组件
+			build_menu_bar(),
 			// 添加填充区域
 			TitleBarPlaceholderBundle::flexible(),
 			// 最小化按钮
