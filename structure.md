@@ -57,6 +57,7 @@ rust_packages_survey/
 │       └── lib.rs                          # 工具库代码
 ├── target/                                 # 构建输出目录
 ├── .gitignore                              # Git忽略规则
+├── .pre-commit-config.yaml                 # commit钩子配置
 ├── Cargo.lock                              # 依赖版本锁文件
 ├── Cargo.toml                              # 工作空间根配置
 ├── crates_survey.md                        # Rust包调研记录

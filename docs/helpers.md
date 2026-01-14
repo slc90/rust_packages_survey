@@ -28,3 +28,5 @@
 ## Embedded Assets
   * https://docs.rs/bevy/latest/bevy/asset/macro.embedded_asset.html
   * https://bevy.org/examples/assets/embedded-asset/
+## git commit钩子配置
+  * https://github.com/j178/prek
