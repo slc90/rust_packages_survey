@@ -10,7 +10,6 @@ use super::components::TestContentMarker;
 /// Test状态进入时的系统
 pub fn on_enter(mut commands: Commands, query: Query<Entity, With<ContentAreaMarker>>) {
 	info!("进入测试页面");
-
 	// 获取内容区域的实体
 	if let Ok(content_area) = query.single() {
 		// 在内容区域中创建Test界面
@@ -32,7 +31,6 @@ pub fn on_enter(mut commands: Commands, query: Query<Entity, With<ContentAreaMar
 /// Test状态离开时的系统
 pub fn on_exit(mut commands: Commands, query: Query<Entity, With<TestContentMarker>>) {
 	info!("离开测试页面");
-
 	// 清理所有Test内容实体
 	for entity in query.iter() {
 		commands.entity(entity).despawn();

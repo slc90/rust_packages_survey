@@ -35,3 +35,5 @@
 ## bevy的标准widgets(实验性质)
   * https://bevy.org/examples/ui-user-interface/standard-widgets/
   * https://docs.rs/bevy/latest/bevy/ui_widgets/index.html#warning-experimental
+## Message系统
+  * https://docs.rs/bevy/latest/bevy/prelude/struct.Messages.html

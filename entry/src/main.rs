@@ -35,7 +35,7 @@ fn main() {
 				custom_layer,
 				fmt_layer,
 				level: Level::DEBUG,
-				filter: "warn,my_crate=debug,ui=debug".to_string(),
+				filter: "warn,my_crate=debug,ui=debug,i18n=debug".to_string(),
 			})
 			.set(WindowPlugin {
 				primary_window: Some(Window {
@@ -61,8 +61,11 @@ fn main() {
 	app.add_plugins(HomepagePlugin);
 	// 菜单栏插件
 	app.add_plugins(MenuBarPlugin);
-
-	app.add_systems(Startup, setup);
+	// 初始化，默认是进入关于页面
+	app.add_systems(
+		Startup,
+		(setup, ui::homepage::about::systems::on_enter).chain(),
+	);
 	app.run();
 }
 
@@ -86,8 +89,7 @@ fn setup(
 				TextColor::BLACK
 			),
 			// 添加菜单栏组件
-			build_menu_bar(),
-			// 添加填充区域
+			build_menu_bar(language_manager),
 			TitleBarPlaceholderBundle::flexible(),
 			// 最小化按钮
 			TitleBarButtonBundle::new(

@@ -20,11 +20,9 @@ impl Plugin for MenuBarPlugin {
 		// Register all components for reflection
 		app.register_type::<MenuBarMarker>()
 			.register_type::<FunctionMenuMarker>()
-			.register_type::<LanguageMenuMarker>()
 			.register_type::<MenuPopupMarker>()
 			.register_type::<MenuItemMarker>()
 			.register_type::<FunctionMenuItemMarker>()
-			.register_type::<LanguageMenuItemMarker>()
 			.register_type::<MenuBarStyle>()
 			.register_type::<MenuButtonStyle>()
 			.register_type::<MenuPopupStyle>()

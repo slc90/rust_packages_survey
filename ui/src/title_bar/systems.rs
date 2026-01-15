@@ -1,6 +1,9 @@
-use crate::title_bar::{
-	components::{PreviousInteraction, TitleBarButtonEnum, TitleBarMarker},
-	resources::{LeftClickAction, TitleBarButtonCooldown, WindowState},
+use crate::{
+	menu_bar::components::FunctionMenuMarker,
+	title_bar::{
+		components::{PreviousInteraction, TitleBarButtonEnum, TitleBarMarker},
+		resources::{LeftClickAction, TitleBarButtonCooldown, WindowState},
+	},
 };
 use bevy::{
 	app::AppExit,
@@ -17,12 +20,14 @@ use bevy::{
 };
 
 /// Handles dragging and moving windows when clicking on the title bar
+#[allow(clippy::too_many_arguments)]
 pub fn drag_and_move_window(
 	mut windows: Query<&mut Window>,
 	action: Res<LeftClickAction>,
 	input: Res<ButtonInput<MouseButton>>,
 	cursor_relative_to_title_bar: Query<&RelativeCursorPosition, With<TitleBarMarker>>,
 	cursor_relative_to_buttons: Query<&RelativeCursorPosition, With<Button>>,
+	cursor_relative_to_function_button: Query<&RelativeCursorPosition, With<FunctionMenuMarker>>,
 	mut buttons: Query<&mut TitleBarButtonEnum>,
 ) {
 	// Both `start_drag_move()` and `start_drag_resize()` must be called after a
@@ -35,8 +40,13 @@ pub fn drag_and_move_window(
 	for mut window in windows.iter_mut() {
 		match *action {
 			LeftClickAction::Move => {
+				// 如果鼠标是点在按钮上的，就不要拖动
 				for relative_cursor_position in cursor_relative_to_buttons {
-					// 如果鼠标是点在按钮上的，就不要拖动
+					if relative_cursor_position.cursor_over() {
+						return;
+					}
+				}
+				for relative_cursor_position in cursor_relative_to_function_button {
 					if relative_cursor_position.cursor_over() {
 						return;
 					}

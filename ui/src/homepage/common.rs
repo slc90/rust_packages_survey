@@ -24,3 +24,6 @@ pub enum Functions {
 #[derive(Component, Default, Clone, Copy, Debug, Reflect)]
 #[reflect(Component)]
 pub struct ContentAreaMarker;
+
+#[derive(Message, Clone)]
+pub struct ChangeFunctionMessage(pub Functions);

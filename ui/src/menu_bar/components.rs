@@ -1,4 +1,6 @@
+use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::prelude::*;
+use bevy::ui::RelativeCursorPosition;
 use bevy::ui_widgets::{MenuButton, MenuItem, MenuPopup};
 
 // ============================================================================
@@ -17,12 +19,6 @@ pub struct MenuBarMarker;
 #[reflect(Component)]
 pub struct FunctionMenuMarker;
 
-/// Marker component for language menu button
-/// Used to identify the language selection menu button
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
-pub struct LanguageMenuMarker;
-
 /// Marker component for menu popup
 /// Used to identify menu popup entities
 #[derive(Component, Default, Clone, Copy, Debug, Reflect)]
@@ -40,12 +36,6 @@ pub struct MenuItemMarker;
 #[derive(Component, Default, Clone, Copy, Debug, Reflect)]
 #[reflect(Component)]
 pub struct FunctionMenuItemMarker;
-
-/// Marker component for language menu items
-/// Used to identify language-specific menu items
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
-pub struct LanguageMenuItemMarker;
 
 // ============================================================================
 // STYLE COMPONENTS - Visual appearance configuration
@@ -163,7 +153,7 @@ pub struct MenuItemStyle {
 impl Default for MenuItemStyle {
 	fn default() -> Self {
 		Self {
-			background_color: Color::NONE,
+			background_color: Color::WHITE,
 			hover_background_color: Color::srgb(0.9, 0.9, 0.9),
 			text_color: Color::BLACK,
 			padding: UiRect::all(Val::Px(8.0)),
@@ -195,30 +185,7 @@ impl Default for MenuBarBundle {
 		let style = MenuBarStyle::default();
 		Self {
 			node: Node {
-				width: Val::Percent(100.0),
-				height: Val::Px(style.height),
-				flex_direction: FlexDirection::Row,
-				align_items: AlignItems::Center,
-				padding: style.padding,
-				column_gap: Val::Px(style.spacing),
-				position_type: PositionType::Absolute,
-				top: Val::Px(40.0),
-				..default()
-			},
-			menu_bar_marker: MenuBarMarker,
-			style,
-		}
-	}
-}
-
-impl MenuBarBundle {
-	/// Creates a menu bar bundle suitable for inline placement within a title bar
-	/// Removes absolute positioning and uses relative layout for flex containers
-	pub fn inline() -> Self {
-		let style = MenuBarStyle::default();
-		Self {
-			node: Node {
-				width: Val::Percent(100.0),
+				width: Val::Percent(80.0),
 				height: Val::Px(style.height),
 				flex_direction: FlexDirection::Row,
 				align_items: AlignItems::Center,
@@ -251,6 +218,9 @@ pub struct FunctionMenuButtonBundle {
 
 	/// Visual style configuration
 	pub style: MenuButtonStyle,
+
+	/// 防止鼠标点到menu_bar时也能拖动窗口
+	pub relative_cursor_position: RelativeCursorPosition,
 }
 
 impl Default for FunctionMenuButtonBundle {
@@ -266,42 +236,7 @@ impl Default for FunctionMenuButtonBundle {
 			function_marker: FunctionMenuMarker,
 			background_color: BackgroundColor(style.background_color),
 			style,
-		}
-	}
-}
-
-/// Bundle for spawning a language menu button
-#[derive(Bundle)]
-pub struct LanguageMenuButtonBundle {
-	/// Base UI node with layout properties
-	pub node: Node,
-
-	/// Bevy MenuButton component for menu functionality
-	pub menu_button: MenuButton,
-
-	/// Marker component for language menu
-	pub language_marker: LanguageMenuMarker,
-
-	/// Background color component
-	pub background_color: BackgroundColor,
-
-	/// Visual style configuration
-	pub style: MenuButtonStyle,
-}
-
-impl Default for LanguageMenuButtonBundle {
-	fn default() -> Self {
-		let style = MenuButtonStyle::default();
-		Self {
-			node: Node {
-				padding: style.padding,
-				border_radius: style.border_radius,
-				..default()
-			},
-			menu_button: MenuButton,
-			language_marker: LanguageMenuMarker,
-			background_color: BackgroundColor(style.background_color),
-			style,
+			relative_cursor_position: RelativeCursorPosition::default(),
 		}
 	}
 }
@@ -334,11 +269,14 @@ impl Default for MenuPopupBundle {
 		let style = MenuPopupStyle::default();
 		Self {
 			node: Node {
+				display: Display::Flex,
 				flex_direction: FlexDirection::Column,
 				padding: style.padding,
 				border: style.border,
 				border_radius: style.border_radius,
 				position_type: PositionType::Absolute,
+				min_height: Val::Px(40.0),
+				min_width: Val::Px(150.0),
 				..default()
 			},
 			menu_popup: MenuPopup::default(),
@@ -370,11 +308,14 @@ pub struct FunctionMenuItemBundle {
 
 	/// Visual style configuration
 	pub style: MenuItemStyle,
+
+	/// 这是和Tab键联用的，功能上不需要，但是不加的话，终端一直报Warn
+	tab_index: TabIndex,
 }
 
-impl FunctionMenuItemBundle {
+impl Default for FunctionMenuItemBundle {
 	/// Creates a new FunctionMenuItemBundle with the given label
-	pub fn new(_label: impl Into<String>) -> Self {
+	fn default() -> Self {
 		let style = MenuItemStyle::default();
 		Self {
 			node: Node {
@@ -387,47 +328,7 @@ impl FunctionMenuItemBundle {
 			function_item_marker: FunctionMenuItemMarker,
 			background_color: BackgroundColor(style.background_color),
 			style,
-		}
-	}
-}
-
-/// Bundle for spawning a language menu item
-#[derive(Bundle)]
-pub struct LanguageMenuItemBundle {
-	/// Base UI node with layout properties
-	pub node: Node,
-
-	/// Bevy MenuItem component for menu item functionality
-	pub menu_item: MenuItem,
-
-	/// Marker component for menu item
-	pub item_marker: MenuItemMarker,
-
-	/// Marker component for language menu item
-	pub language_item_marker: LanguageMenuItemMarker,
-
-	/// Background color component
-	pub background_color: BackgroundColor,
-
-	/// Visual style configuration
-	pub style: MenuItemStyle,
-}
-
-impl LanguageMenuItemBundle {
-	/// Creates a new LanguageMenuItemBundle with the given label
-	pub fn new(_label: impl Into<String>) -> Self {
-		let style = MenuItemStyle::default();
-		Self {
-			node: Node {
-				padding: style.padding,
-				border_radius: style.border_radius,
-				..default()
-			},
-			menu_item: MenuItem,
-			item_marker: MenuItemMarker,
-			language_item_marker: LanguageMenuItemMarker,
-			background_color: BackgroundColor(style.background_color),
-			style,
+			tab_index: TabIndex(0),
 		}
 	}
 }

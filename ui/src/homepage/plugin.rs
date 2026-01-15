@@ -1,5 +1,5 @@
 use crate::homepage::about::plugin::AboutPlugin;
-use crate::homepage::common::{ContentAreaMarker, Functions};
+use crate::homepage::common::{ChangeFunctionMessage, ContentAreaMarker, Functions};
 use crate::homepage::test::plugin::TestPlugin;
 use bevy::prelude::*;
 
@@ -15,13 +15,35 @@ impl Plugin for HomepagePlugin {
 	fn build(&self, app: &mut App) {
 		// Register common components for reflection
 		app.register_type::<ContentAreaMarker>();
-
 		// Initialize the main state enum for the homepage
 		app.init_state::<Functions>();
-
+		// 注册切换功能的消息
+		app.add_message::<ChangeFunctionMessage>();
 		// Add About and Test state plugins
 		// These plugins handle their own component registration and system setup
 		app.add_plugins(AboutPlugin);
 		app.add_plugins(TestPlugin);
+		// 注册systems
+		app.add_systems(Update, change_function);
+	}
+}
+
+/// 接收切换ContentArea内容的消息
+fn change_function(
+	mut messages: MessageReader<ChangeFunctionMessage>,
+	current_state: Res<State<Functions>>,
+	mut next_state: ResMut<NextState<Functions>>,
+) {
+	if messages.is_empty() {
+		return;
+	}
+	for message in messages.read() {
+		let current_function = current_state.get();
+		let new_function = &message.0;
+		if current_function != new_function {
+			next_state.set(new_function.clone());
+		} else {
+			debug!("当前功能和新功能相同:{:?},无需切换", current_function);
+		}
 	}
 }
