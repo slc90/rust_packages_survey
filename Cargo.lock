@@ -1849,6 +1849,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "config"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "i18n",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2264,9 +2274,11 @@ name = "entry"
 version = "0.1.1"
 dependencies = [
  "bevy",
+ "config",
  "embedded_assets",
  "i18n",
  "logger",
+ "pre_build",
  "rstest",
  "ui",
 ]
@@ -2817,6 +2829,8 @@ name = "i18n"
 version = "0.1.1"
 dependencies = [
  "bevy",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3864,6 +3878,10 @@ checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy",
 ]
+
+[[package]]
+name = "pre_build"
+version = "0.1.0"
 
 [[package]]
 name = "presser"

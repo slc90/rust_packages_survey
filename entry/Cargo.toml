@@ -12,6 +12,10 @@ logger = { path = "../logger" }
 ui = { path = "../ui" }
 embedded_assets = { path = "../embedded_assets" }
 i18n = { path = "../i18n" }
+config = { path = "../config" }
 
 [dev-dependencies]
 rstest = { workspace = true }
+
+[build-dependencies]
+pre_build = { path = "../pre_build" }

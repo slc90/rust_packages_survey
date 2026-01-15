@@ -25,14 +25,6 @@ pub struct LanguageManager {
 	current_language: Language,
 }
 
-impl Default for LanguageManager {
-	fn default() -> Self {
-		Self {
-			current_language: Language::Chinese,
-		}
-	}
-}
-
 impl LanguageManager {
 	/// Returns the current language
 	pub fn current_language(&self) -> Language {
@@ -50,6 +42,14 @@ impl LanguageManager {
 		match self.current_language {
 			Language::English => locale_en::lookup(key),
 			Language::Chinese => locale_zh::lookup(key),
+		}
+	}
+}
+
+impl Default for LanguageManager {
+	fn default() -> Self {
+		Self {
+			current_language: Language::Chinese,
 		}
 	}
 }

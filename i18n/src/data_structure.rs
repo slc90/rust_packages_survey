@@ -1,7 +1,8 @@
 use bevy::prelude::Reflect;
+use serde::{Deserialize, Serialize};
 
 /// 所有可用的语言
-#[derive(Debug, Clone, Copy, Reflect, PartialEq)]
+#[derive(Debug, Clone, Copy, Reflect, PartialEq, Serialize, Deserialize)]
 pub enum Language {
 	English,
 	Chinese,

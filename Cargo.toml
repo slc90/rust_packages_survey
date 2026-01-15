@@ -1,11 +1,13 @@
 [workspace]
 members = [
+    "pre_build",
     "entry",
     "logger",
     "utils",
     "ui",
     "embedded_assets",
-    "i18n"
+    "i18n",
+    "config"
 ]
 resolver = "2"
 
@@ -19,6 +21,8 @@ version = "0.1.1"
 [workspace.dependencies]
 rstest = "0.26.1"
 bevy = "0.18"
+serde = "1.0.228"
+serde_json = "1.0.149"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

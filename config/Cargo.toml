@@ -1,12 +1,13 @@
 [package]
-name = "i18n"
+name = "config"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "翻译"
+description = "配置"
 
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+i18n = { path = "../i18n" }

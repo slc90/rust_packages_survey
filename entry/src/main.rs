@@ -8,12 +8,14 @@ use bevy::{
 	prelude::*,
 	window::WindowResolution,
 };
+use config::{ConfigPlugin, Setting, data_structure::read_from_file_or_default};
 use embedded_assets::{
 	const_assets_path::{CLOSE_ICON, LOGO, MAXIMIZE_ICON, MINIMIZE_ICON},
 	plugin::EmbeddedAssetPlugin,
 };
 use i18n::{I18nPlugin, LanguageManager, data_structure::LanguageKey};
 use logger::{custom_layer, fmt_layer};
+use std::env;
 use ui::{
 	homepage::{common::ContentAreaMarker, plugin::HomepagePlugin},
 	menu_bar::{plugin::MenuBarPlugin, systems::build_menu_bar},
@@ -61,6 +63,8 @@ fn main() {
 	app.add_plugins(HomepagePlugin);
 	// 菜单栏插件
 	app.add_plugins(MenuBarPlugin);
+	// 配置插件
+	app.add_plugins(ConfigPlugin);
 	// 初始化，默认是进入关于页面
 	app.add_systems(
 		Startup,
@@ -72,8 +76,15 @@ fn main() {
 fn setup(
 	mut commands: Commands,
 	asset_server: Res<AssetServer>,
-	language_manager: Res<LanguageManager>,
+	mut language_manager: ResMut<LanguageManager>,
+	mut setting: ResMut<Setting>,
 ) {
+	// 获取配置文件路径
+	let config_path = get_config_file_path();
+	// 从路径读取配置
+	*setting = read_from_file_or_default(&config_path);
+	// 设置语言
+	language_manager.set_current_language(setting.language);
 	// 生成相机用于UI渲染
 	commands.spawn(Camera2d);
 	// 创建标题栏
@@ -89,7 +100,7 @@ fn setup(
 				TextColor::BLACK
 			),
 			// 添加菜单栏组件
-			build_menu_bar(language_manager),
+			build_menu_bar(language_manager.into()),
 			TitleBarPlaceholderBundle::flexible(),
 			// 最小化按钮
 			TitleBarButtonBundle::new(
@@ -126,4 +137,14 @@ fn setup(
 		},
 		BackgroundColor(Color::WHITE),
 	));
+}
+
+/// 获取配置文件路径
+fn get_config_file_path() -> String {
+	// 这个在编译时由 build.rs 注入
+	let dir = env!("CONFIG_DIR");
+	std::path::Path::new(dir)
+		.join("config.json")
+		.to_string_lossy()
+		.to_string()
 }
