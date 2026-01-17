@@ -6,6 +6,5 @@ use bevy::prelude::*;
 
 /// Marker component for About state UI content
 /// Used to identify the About state UI elements in queries
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct AboutContentMarker;

@@ -7,5 +7,6 @@ pub fn lookup(language_key: LanguageKey) -> &'static str {
 		LanguageKey::Function => "功能",
 		LanguageKey::Language => "语言",
 		LanguageKey::About => "关于",
+		LanguageKey::Setting => "设置",
 	}
 }

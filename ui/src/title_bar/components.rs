@@ -6,14 +6,12 @@ use bevy::{prelude::*, ui::RelativeCursorPosition};
 
 /// Marker component for the title bar container
 /// Used to identify the main title bar entity in queries
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct TitleBarMarker;
 
 /// Marker component for placeholder areas in the title bar
 /// Used to identify placeholder entities where custom UI can be inserted
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct TitleBarPlaceholderMarker;
 
 // ============================================================================
@@ -22,8 +20,7 @@ pub struct TitleBarPlaceholderMarker;
 
 /// Button type enumeration for title bar control buttons
 /// Each variant represents a different window control function
-#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TitleBarButtonEnum {
 	/// Minimize window button - reduces window to taskbar/dock
 	Minimize,
@@ -39,8 +36,7 @@ pub enum TitleBarButtonEnum {
 }
 
 /// Component to track previous interaction state for debouncing button clicks
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct PreviousInteraction {
 	/// Previous interaction state
 	pub interaction: Option<Interaction>,
@@ -52,8 +48,7 @@ pub struct PreviousInteraction {
 
 /// Style configuration for the title bar
 /// Controls the visual appearance of the title bar
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct TitleBarStyle {
 	/// Height of the title bar in pixels
 	pub height: f32,

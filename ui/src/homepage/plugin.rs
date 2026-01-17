@@ -1,28 +1,26 @@
 use crate::homepage::about::plugin::AboutPlugin;
-use crate::homepage::common::{ChangeFunctionMessage, ContentAreaMarker, Functions};
-use crate::homepage::test::plugin::TestPlugin;
+use crate::homepage::common::{ChangeFunctionMessage, Functions};
+use crate::homepage::setting::plugin::SettingPlugin;
 use bevy::prelude::*;
 
 /// Plugin for the homepage system
 ///
 /// This plugin provides state management for the homepage content area
-/// with About and Test states that display different UI content below the title bar.
+/// with About and Setting states that display different UI content below the title bar.
 /// It serves as the main plugin that orchestrates all homepage functionality
-/// by including both AboutPlugin and TestPlugin as sub-plugins.
+/// by including both AboutPlugin and SettingPlugin as sub-plugins.
 pub struct HomepagePlugin;
 
 impl Plugin for HomepagePlugin {
 	fn build(&self, app: &mut App) {
-		// Register common components for reflection
-		app.register_type::<ContentAreaMarker>();
 		// Initialize the main state enum for the homepage
 		app.init_state::<Functions>();
 		// 注册切换功能的消息
 		app.add_message::<ChangeFunctionMessage>();
-		// Add About and Test state plugins
+		// Add About and Setting state plugins
 		// These plugins handle their own component registration and system setup
 		app.add_plugins(AboutPlugin);
-		app.add_plugins(TestPlugin);
+		app.add_plugins(SettingPlugin);
 		// 注册systems
 		app.add_systems(Update, change_function);
 	}

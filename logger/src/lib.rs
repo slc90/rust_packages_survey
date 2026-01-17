@@ -1,5 +1,6 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
+#![allow(clippy::type_complexity)]
 
 use bevy::{
 	log::{

@@ -1,5 +1,6 @@
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
+#![allow(clippy::type_complexity)]
 
 /// 简单的加法函数
 pub fn add(a: i32, b: i32) -> i32 {

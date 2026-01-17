@@ -6,12 +6,12 @@ use bevy::state::state::States;
 // ============================================================================
 
 /// 所有功能的枚举，用来切换ContentArea
-#[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default, Reflect)]
+#[derive(States, Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub enum Functions {
 	#[default]
 	About,
 
-	Test,
+	Setting,
 }
 
 // ============================================================================
@@ -21,8 +21,7 @@ pub enum Functions {
 /// Marker component for the content area container
 /// Used to identify the main content area entity in queries
 /// This area appears below the title bar and displays different UI content based on state
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct ContentAreaMarker;
 
 #[derive(Message, Clone)]

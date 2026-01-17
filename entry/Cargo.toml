@@ -16,6 +16,3 @@ config = { path = "../config" }
 
 [dev-dependencies]
 rstest = { workspace = true }
-
-[build-dependencies]
-pre_build = { path = "../pre_build" }

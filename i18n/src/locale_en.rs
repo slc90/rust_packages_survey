@@ -7,5 +7,6 @@ pub fn lookup(language_key: LanguageKey) -> &'static str {
 		LanguageKey::Function => "Function",
 		LanguageKey::Language => "Language",
 		LanguageKey::About => "About",
+		LanguageKey::Setting => "Settings",
 	}
 }

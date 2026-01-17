@@ -49,7 +49,7 @@ pub fn on_function_menu_event(
 	}
 }
 
-/// Spawn function menu popup with items for About and Test
+/// Spawn function menu popup with items for About and Setting
 fn spawn_function_menu(
 	anchor: Entity,
 	mut commands: Commands,
@@ -103,11 +103,14 @@ fn spawn_function_menu(
 					observe(
 						|_activated: On<Activate>,
 						 mut writer: MessageWriter<ChangeFunctionMessage>| {
-							debug!("点击Test按钮");
-							writer.write(ChangeFunctionMessage(Functions::Test));
+							debug!("点击设置按钮");
+							writer.write(ChangeFunctionMessage(Functions::Setting));
 						}
 					),
-					children![(Text::new("Test"), TextColor(Color::BLACK),)],
+					children![(
+						Text::new(language_manager.lookup(LanguageKey::Setting)),
+						TextColor(Color::BLACK),
+					)],
 				),
 			],
 		))

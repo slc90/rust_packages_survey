@@ -9,32 +9,27 @@ use bevy::ui_widgets::{MenuButton, MenuItem, MenuPopup};
 
 /// Marker component for the menu bar container
 /// Used to identify the main menu bar entity in queries
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct MenuBarMarker;
 
 /// Marker component for function menu button
 /// Used to identify the function selection menu button
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct FunctionMenuMarker;
 
 /// Marker component for menu popup
 /// Used to identify menu popup entities
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct MenuPopupMarker;
 
 /// Marker component for menu items
 /// Used to identify individual items within a menu
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct MenuItemMarker;
 
 /// Marker component for function menu items
 /// Used to identify function-specific menu items
-#[derive(Component, Default, Clone, Copy, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone, Copy, Debug)]
 pub struct FunctionMenuItemMarker;
 
 // ============================================================================
@@ -43,8 +38,7 @@ pub struct FunctionMenuItemMarker;
 
 /// Style configuration for the menu bar
 /// Controls the visual appearance of the menu bar
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct MenuBarStyle {
 	/// Height of the menu bar in pixels
 	pub height: f32,
@@ -71,8 +65,7 @@ impl Default for MenuBarStyle {
 }
 
 /// Style configuration for menu buttons
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct MenuButtonStyle {
 	/// Background color of the button
 	pub background_color: Color,
@@ -99,8 +92,7 @@ impl Default for MenuButtonStyle {
 }
 
 /// Style configuration for menu popups
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct MenuPopupStyle {
 	/// Background color of the menu popup
 	pub background_color: Color,
@@ -131,8 +123,7 @@ impl Default for MenuPopupStyle {
 }
 
 /// Style configuration for menu items
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct MenuItemStyle {
 	/// Background color of the menu item
 	pub background_color: Color,

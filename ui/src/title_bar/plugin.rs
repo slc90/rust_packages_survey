@@ -1,5 +1,4 @@
 use crate::title_bar::{
-	components::*,
 	resources::{LeftClickAction, TitleBarButtonCooldown, WindowState},
 	systems::{drag_and_move_window, handle_button_clicks, handle_window_visibility},
 };
@@ -14,12 +13,6 @@ pub struct TitleBarPlugin;
 
 impl Plugin for TitleBarPlugin {
 	fn build(&self, app: &mut App) {
-		// Register components for reflection
-		app.register_type::<TitleBarMarker>()
-			.register_type::<TitleBarPlaceholderMarker>()
-			.register_type::<TitleBarButtonEnum>()
-			.register_type::<TitleBarStyle>()
-			.register_type::<PreviousInteraction>();
 		// 注册资源
 		app.insert_resource(LeftClickAction::Move);
 		app.insert_resource(TitleBarButtonCooldown::default());

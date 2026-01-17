@@ -2,6 +2,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
+#![allow(clippy::type_complexity)]
 
 use bevy::{
 	log::{Level, LogPlugin},
@@ -37,7 +38,8 @@ fn main() {
 				custom_layer,
 				fmt_layer,
 				level: Level::DEBUG,
-				filter: "warn,my_crate=debug,ui=debug,i18n=debug".to_string(),
+				filter: "warn,my_crate=debug,ui=debug,i18n=debug,config=debug,utils=debug"
+					.to_string(),
 			})
 			.set(WindowPlugin {
 				primary_window: Some(Window {
@@ -79,10 +81,18 @@ fn setup(
 	mut language_manager: ResMut<LanguageManager>,
 	mut setting: ResMut<Setting>,
 ) {
-	// 获取配置文件路径
-	let config_path = get_config_file_path();
-	// 从路径读取配置
-	*setting = read_from_file_or_default(&config_path);
+	// 获取当前 exe 路径，如果失败就直接返回
+	if let Ok(exe_path) = env::current_exe() {
+		// 从路径读取配置
+		let config_path = exe_path.join("../config_file/config.json");
+		match config_path.to_str() {
+			Some(config_path) => *setting = read_from_file_or_default(config_path),
+			None => error!("解析配置路径出错,使用默认配置"),
+		}
+	} else {
+		error!("解析当前exe路径出错,使用默认配置");
+	};
+
 	// 设置语言
 	language_manager.set_current_language(setting.language);
 	// 生成相机用于UI渲染
@@ -137,14 +147,4 @@ fn setup(
 		},
 		BackgroundColor(Color::WHITE),
 	));
-}
-
-/// 获取配置文件路径
-fn get_config_file_path() -> String {
-	// 这个在编译时由 build.rs 注入
-	let dir = env!("CONFIG_DIR");
-	std::path::Path::new(dir)
-		.join("config.json")
-		.to_string_lossy()
-		.to_string()
 }

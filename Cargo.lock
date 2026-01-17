@@ -2278,7 +2278,6 @@ dependencies = [
  "embedded_assets",
  "i18n",
  "logger",
- "pre_build",
  "rstest",
  "ui",
 ]
@@ -3880,10 +3879,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pre_build"
-version = "0.1.0"
-
-[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4812,6 +4807,7 @@ name = "ui"
 version = "0.1.1"
 dependencies = [
  "bevy",
+ "config",
  "i18n",
 ]
 
