@@ -112,6 +112,20 @@ fn spawn_function_menu(
 						TextColor(Color::BLACK),
 					)],
 				),
+				(
+					FunctionMenuItemBundle::default(),
+					observe(
+						|_activated: On<Activate>,
+						 mut writer: MessageWriter<ChangeFunctionMessage>| {
+							debug!("点击实时波形按钮");
+							writer.write(ChangeFunctionMessage(Functions::RealtimePlot));
+						}
+					),
+					children![(
+						Text::new(language_manager.lookup(LanguageKey::RealtimePlot)),
+						TextColor(Color::BLACK),
+					)],
+				),
 			],
 		))
 		.id();

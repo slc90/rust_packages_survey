@@ -37,3 +37,6 @@
   * https://docs.rs/bevy/latest/bevy/ui_widgets/index.html#warning-experimental
 ## Message系统
   * https://docs.rs/bevy/latest/bevy/prelude/struct.Messages.html
+## bevy中画折线
+  * https://bevy.org/examples/2d-rendering/2d-shapes/
+  * https://docs.rs/bevy/latest/bevy/prelude/struct.Mesh.html

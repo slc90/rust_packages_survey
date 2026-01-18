@@ -15,4 +15,5 @@ pub enum LanguageKey {
 	Language,
 	About,
 	Setting,
+	RealtimePlot,
 }

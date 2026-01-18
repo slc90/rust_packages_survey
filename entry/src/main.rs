@@ -67,10 +67,10 @@ fn main() {
 	app.add_plugins(MenuBarPlugin);
 	// 配置插件
 	app.add_plugins(ConfigPlugin);
-	// 初始化，默认是进入关于页面
+	// 初始化，设置默认进入的页面
 	app.add_systems(
 		Startup,
-		(setup, ui::homepage::about::systems::on_enter).chain(),
+		(setup, ui::homepage::realtime_plot::systems::on_enter).chain(),
 	);
 	app.run();
 }
