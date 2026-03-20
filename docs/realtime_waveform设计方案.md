@@ -170,18 +170,16 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
 
 ### Phase 3: 渲染绑定
 
-- [ ] 3.1 在 `systems.rs` 中实现 `spawn_waveform_mesh()` 系统
-  - 为每个通道创建独立的 `Mesh2d` 实体
-  - 绑定不同颜色材质
-- [ ] 3.2 在 `systems.rs` 中实现 `update_waveform_mesh()` 系统
+- [x] 3.1 在 `systems.rs` 中实现 `init_waveform_rendering()` 系统
+  - 初始化波形网格和材质资源
+- [x] 3.2 在 `systems.rs` 中实现 `update_waveform_display()` 系统
   - 从 `WaveformData` 读取数据
   - 更新 `Polyline2d` Mesh
-- [ ] 3.3 在 `systems.rs` 中实现多通道颜色映射
+- [x] 3.3 在 `systems.rs` 中实现多通道颜色映射
   - 定义颜色数组：`["#3498db", "#e74c3c", "#2ecc71", "#f1c40f", ...]`
   - 根据通道索引选择颜色
-- [ ] 3.4 在 `systems.rs` 中实现滚动显示逻辑
-  - 新数据从右侧移入
-  - 旧数据从左侧移出
+- [x] 3.4 在 `WaveformData` 中实现滚动显示逻辑
+  - 新数据从右侧移入，旧数据从左侧移出（RingBuffer）
 - [ ] 3.5 在 `systems.rs` 中实现坐标轴和网格绘制
   - X轴时间刻度
   - Y轴幅度刻度
