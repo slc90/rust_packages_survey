@@ -82,6 +82,12 @@ fn generate_waveform_points(
 	channel_index: usize,
 	point_count: usize,
 ) -> Vec<Vec2> {
+	// 如果没有数据或点数为0，返回一个默认点
+	if channel_data.is_empty() || point_count == 0 {
+		let y_offset = (CHANNEL_HEIGHT / 2.0) - (channel_index as f32 * CHANNEL_HEIGHT);
+		return vec![Vec2::new(0.0, y_offset)];
+	}
+
 	let y_offset = (CHANNEL_HEIGHT / 2.0) - (channel_index as f32 * CHANNEL_HEIGHT);
 	let step = (WAVEFORM_WIDTH / point_count as f32).max(1.0);
 
@@ -126,9 +132,10 @@ pub fn init_waveform_rendering(
 		})
 		.collect();
 
-	// 创建初始网格（空数据）
+	// 创建初始网格（使用简单的默认点）
+	let default_points = vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)];
 	let mesh_handles: Vec<_> = (0..4)
-		.map(|_| meshes.add(Polyline2d::new(vec![])))
+		.map(|_| meshes.add(Polyline2d::new(default_points.clone())))
 		.collect();
 
 	commands.insert_resource(WaveformMaterials {
@@ -144,10 +151,17 @@ pub fn init_waveform_rendering(
 pub fn update_waveform_display(
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
-	waveform_data: Res<WaveformData>,
-	mut waveform_meshes: ResMut<WaveformMeshes>,
-	mut waveform_materials: ResMut<WaveformMaterials>,
+	waveform_data: Option<Res<WaveformData>>,
+	waveform_meshes: Option<ResMut<WaveformMeshes>>,
+	waveform_materials: Option<ResMut<WaveformMaterials>>,
 ) {
+	// 如果资源不可用，跳过
+	let (Some(waveform_data), Some(mut waveform_meshes), Some(mut waveform_materials)) =
+		(waveform_data, waveform_meshes, waveform_materials)
+	else {
+		return;
+	};
+
 	if !waveform_data.is_changed() {
 		return;
 	}
@@ -158,9 +172,11 @@ pub fn update_waveform_display(
 	// 确保有足够的网格和材质
 	let current_material_count = waveform_materials.materials.len();
 	for i in current_material_count..channels.len() {
+		// 使用简单的默认点替代空向量
+		let default_points = vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)];
 		waveform_meshes
 			.handles
-			.push(meshes.add(Polyline2d::new(vec![])));
+			.push(meshes.add(Polyline2d::new(default_points)));
 		let idx = i % CHANNEL_COLORS.len();
 		let c = CHANNEL_COLORS[idx];
 		waveform_materials
@@ -196,102 +212,37 @@ pub fn cleanup_waveform_rendering(mut commands: Commands) {
 // ============================================================================
 
 /// 坐标轴颜色
+#[allow(dead_code)]
 const AXIS_COLOR: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
 /// 网格颜色
+#[allow(dead_code)]
 const GRID_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
 
 /// 初始化坐标轴和网格
+/// TODO: 暂时禁用，需要修复 overflow 问题
 pub fn spawn_axis_grid(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
-	settings: Res<WaveformSettings>,
+	settings: Option<Res<WaveformSettings>>,
 ) {
-	info!("Spawning axis and grid");
+	info!("Spawning axis and grid - DISABLED FOR DEBUG");
 
-	let channel_height = CHANNEL_HEIGHT;
-	let total_height = channel_height * settings.channel_count as f32;
-	let width = WAVEFORM_WIDTH;
+	// 获取设置值（使用默认值兜底）
+	let channel_count = settings.map(|s| s.channel_count).unwrap_or(1);
+	info!("Channel count: {}", channel_count);
 
-	// X轴（水平中心线）
-	for ch in 0..settings.channel_count {
-		let y_offset = (total_height / 2.0) - (ch as f32 * channel_height);
-		let x_axis_points = vec![
-			Vec2::new(-width / 2.0, y_offset),
-			Vec2::new(width / 2.0, y_offset),
-		];
-		let x_axis_mesh = meshes.add(Polyline2d::new(x_axis_points));
-		let axis_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
-			AXIS_COLOR[0],
-			AXIS_COLOR[1],
-			AXIS_COLOR[2],
-			AXIS_COLOR[3],
-		))));
-
-		commands.spawn((
-			Mesh2d(x_axis_mesh),
-			MeshMaterial2d(axis_mat),
-			Transform::from_xyz(0.0, 0.0, -0.1),
-		));
-	}
-
-	// Y轴（垂直中心线）
-	let y_axis_points = vec![Vec2::new(-width / 2.0, 0.0), Vec2::new(width / 2.0, 0.0)];
-	let y_axis_mesh = meshes.add(Polyline2d::new(y_axis_points));
-	let y_axis_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
-		AXIS_COLOR[0],
-		AXIS_COLOR[1],
-		AXIS_COLOR[2],
-		AXIS_COLOR[3],
-	))));
+	// 创建一个非常简单的测试 - 使用 Circle
+	let circle_mesh = meshes.add(Circle { radius: 50.0 }.mesh());
+	let test_mat = materials.add(ColorMaterial::from(Color::srgb(0.5, 0.5, 0.5)));
 
 	commands.spawn((
-		Mesh2d(y_axis_mesh),
-		MeshMaterial2d(y_axis_mat),
+		Mesh2d(circle_mesh),
+		MeshMaterial2d(test_mat),
 		Transform::from_xyz(0.0, 0.0, -0.1),
 	));
 
-	// 垂直网格线
-	let grid_spacing = width / 10.0;
-	for i in 0..=10 {
-		let x = -width / 2.0 + i as f32 * grid_spacing;
-		let grid_points = vec![
-			Vec2::new(x, -total_height / 2.0),
-			Vec2::new(x, total_height / 2.0),
-		];
-		let grid_mesh = meshes.add(Polyline2d::new(grid_points));
-		let grid_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
-			GRID_COLOR[0],
-			GRID_COLOR[1],
-			GRID_COLOR[2],
-			GRID_COLOR[3],
-		))));
-
-		commands.spawn((
-			Mesh2d(grid_mesh),
-			MeshMaterial2d(grid_mat),
-			Transform::from_xyz(0.0, 0.0, -0.2),
-		));
-	}
-
-	// 水平网格线
-	for ch in 0..=settings.channel_count {
-		let y = (total_height / 2.0) - (ch as f32 * channel_height);
-		let grid_points = vec![Vec2::new(-width / 2.0, y), Vec2::new(width / 2.0, y)];
-		let grid_mesh = meshes.add(Polyline2d::new(grid_points));
-		let grid_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
-			GRID_COLOR[0],
-			GRID_COLOR[1],
-			GRID_COLOR[2],
-			GRID_COLOR[3],
-		))));
-
-		commands.spawn((
-			Mesh2d(grid_mesh),
-			MeshMaterial2d(grid_mat),
-			Transform::from_xyz(0.0, 0.0, -0.2),
-		));
-	}
+	info!("Test mesh (quad) spawned successfully");
 }
 
 // ============================================================================
@@ -300,9 +251,14 @@ pub fn spawn_axis_grid(
 
 /// 处理通道数滑动条点击
 pub fn handle_channel_slider_click(
-	mut settings: ResMut<WaveformSettings>,
+	settings: Option<ResMut<WaveformSettings>>,
 	interaction_query: Query<&Interaction, (Changed<Interaction>, With<ChannelSliderMarker>)>,
 ) {
+	// 如果 WaveformSettings 不可用，跳过
+	let Some(mut settings) = settings else {
+		return;
+	};
+
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			// 点击时增加通道数（循环）
@@ -318,9 +274,14 @@ pub fn handle_channel_slider_click(
 
 /// 处理采样率下拉框点击
 pub fn handle_sample_rate_click(
-	mut settings: ResMut<WaveformSettings>,
+	settings: Option<ResMut<WaveformSettings>>,
 	interaction_query: Query<&Interaction, (Changed<Interaction>, With<SampleRateDropdownMarker>)>,
 ) {
+	// 如果 WaveformSettings 不可用，跳过
+	let Some(mut settings) = settings else {
+		return;
+	};
+
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			// 点击时切换到下一个采样率选项（循环）
@@ -433,9 +394,14 @@ pub fn spawn_waveform_settings_ui(mut commands: Commands) {
 
 /// 更新波形设置
 pub fn update_waveform_settings(
-	settings: ResMut<WaveformSettings>,
-	mut waveform_data: ResMut<WaveformData>,
+	settings: Option<ResMut<WaveformSettings>>,
+	waveform_data: Option<ResMut<WaveformData>>,
 ) {
+	// 如果资源不可用，跳过
+	let (Some(settings), Some(mut waveform_data)) = (settings, waveform_data) else {
+		return;
+	};
+
 	// 如果通道数变化，更新波形数据
 	if settings.channel_count != waveform_data.channel_count() {
 		waveform_data.clear();
@@ -529,12 +495,24 @@ pub fn init_waveform_generator(mut commands: Commands) {
 /// 该系统根据采样率定时生成波形数据并添加到 WaveformData 中
 #[allow(clippy::too_many_arguments)]
 pub fn generate_waveform_data(
-	mut waveform_data: ResMut<WaveformData>,
-	mut generator_state: ResMut<WaveformGeneratorState>,
-	mut timer: ResMut<WaveformTimer>,
-	settings: Res<WaveformSettings>,
-	time: Res<Time>,
+	waveform_data: Option<ResMut<WaveformData>>,
+	generator_state: Option<ResMut<WaveformGeneratorState>>,
+	timer: Option<ResMut<WaveformTimer>>,
+	settings: Option<Res<WaveformSettings>>,
+	time: Option<Res<Time>>,
 ) {
+	// 如果任何必需资源不可用，跳过
+	let (
+		Some(mut waveform_data),
+		Some(mut generator_state),
+		Some(mut timer),
+		Some(settings),
+		Some(time),
+	) = (waveform_data, generator_state, timer, settings, time)
+	else {
+		return;
+	};
+
 	// 更新计时器的采样率
 	timer.set_sample_rate(settings.sample_rate);
 

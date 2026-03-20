@@ -29,6 +29,7 @@ impl Default for WaveformConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Resource)]
 pub struct Setting {
 	pub language: Language,
+	#[serde(default)]
 	pub waveform: WaveformConfig,
 }
 

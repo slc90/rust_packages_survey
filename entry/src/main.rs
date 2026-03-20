@@ -68,9 +68,10 @@ fn main() {
 	// 配置插件
 	app.add_plugins(ConfigPlugin);
 	// 初始化，设置默认进入的页面
+	app.add_systems(Startup, setup);
 	app.add_systems(
 		Startup,
-		(setup, ui::homepage::realtime_plot::systems::on_enter).chain(),
+		ui::homepage::realtime_plot::systems::on_enter.after(setup),
 	);
 	app.run();
 }
