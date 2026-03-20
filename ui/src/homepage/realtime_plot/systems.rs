@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::homepage::realtime_plot::components::{
 	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker,
 };
-use crate::homepage::realtime_plot::resources::WaveformData;
+use crate::homepage::realtime_plot::resources::{WaveformData, WaveformGenerator};
 
 // ============================================================================
 // REALTIME_PLOT CONSTANTS
@@ -432,5 +432,110 @@ pub fn update_waveform_settings(
 		waveform_data
 			.channels
 			.resize(settings.channel_count, Vec::new());
+	}
+}
+
+// ============================================================================
+// WAVEFORM DATA GENERATION SYSTEMS
+// ============================================================================
+
+/// 波形生成器资源，用于存储生成器状态
+#[derive(Resource, Debug, Default)]
+pub struct WaveformGeneratorState {
+	/// 波形生成器实例
+	pub generator: WaveformGenerator,
+}
+
+/// 波形生成计时器
+#[derive(Resource, Debug)]
+pub struct WaveformTimer {
+	/// 距离下次生成的剩余时间（秒）
+	pub remaining: f32,
+	/// 生成间隔（秒）
+	pub interval: f32,
+}
+
+impl Default for WaveformTimer {
+	fn default() -> Self {
+		Self::new(1000) // 默认 1000 Hz
+	}
+}
+
+impl WaveformTimer {
+	/// 根据采样率创建新的计时器
+	///
+	/// # Arguments
+	/// * `sample_rate` - 采样率 (Hz)
+	pub fn new(sample_rate: u32) -> Self {
+		// 每秒生成 sample_rate 个点
+		let interval = 1.0 / sample_rate as f32;
+		Self {
+			remaining: 0.0,
+			interval,
+		}
+	}
+
+	/// 重置计时器
+	pub fn reset(&mut self) {
+		self.remaining = 0.0;
+	}
+
+	/// 更新计时器
+	///
+	/// # Arguments
+	/// * `dt` - 距上次更新经过的时间（秒）
+	///
+	/// # Returns
+	/// 如果应该生成数据，返回 true
+	pub fn update(&mut self, dt: f32) -> bool {
+		self.remaining += dt;
+		if self.remaining >= self.interval {
+			self.remaining -= self.interval;
+			true
+		} else {
+			false
+		}
+	}
+
+	/// 更新采样率
+	///
+	/// # Arguments
+	/// * `sample_rate` - 新的采样率 (Hz)
+	pub fn set_sample_rate(&mut self, sample_rate: u32) {
+		self.interval = 1.0 / sample_rate as f32;
+	}
+}
+
+/// 初始化波形生成器
+pub fn init_waveform_generator(mut commands: Commands) {
+	info!("初始化波形生成器");
+	commands.insert_resource(WaveformGeneratorState::default());
+	commands.insert_resource(WaveformTimer::default());
+}
+
+/// 生成波形数据
+///
+/// 该系统根据采样率定时生成波形数据并添加到 WaveformData 中
+#[allow(clippy::too_many_arguments)]
+pub fn generate_waveform_data(
+	mut waveform_data: ResMut<WaveformData>,
+	mut generator_state: ResMut<WaveformGeneratorState>,
+	mut timer: ResMut<WaveformTimer>,
+	settings: Res<WaveformSettings>,
+	time: Res<Time>,
+) {
+	// 更新计时器的采样率
+	timer.set_sample_rate(settings.sample_rate);
+
+	// 更新生成器的采样率
+	generator_state.generator.sample_rate = settings.sample_rate;
+
+	// 检查是否应该生成数据
+	if timer.update(time.delta_secs()) {
+		// 为每个通道生成一个数据点
+		for ch in 0..settings.channel_count {
+			let value = generator_state.generator.generate_single();
+			waveform_data.push(ch, value);
+		}
 	}
 }

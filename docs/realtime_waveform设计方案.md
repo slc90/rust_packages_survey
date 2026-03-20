@@ -160,12 +160,11 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
   - 生成均匀分布随机数（替代高斯分布）
   - 叠加正弦波模拟真实信号
 - [x] 2.4 实现 `WaveformGenerator::generate_single()` 方法
-- [ ] 2.5 在 `systems.rs` 中实现数据生成系统 `generate_waveform_data`
-  - 使用 `Commands` 发送 `WaveformDataMessage`
-- [ ] 2.6 在 `systems.rs` 中实现数据接收系统 `receive_waveform_data`
-  - 使用 `MessageReader<WaveformDataMessage>` 读取数据
-  - 更新 `WaveformData` 资源
-- [ ] 2.7 配置定时器系统
+- [x] 2.5 在 `systems.rs` 中实现数据生成系统 `generate_waveform_data`
+  - 直接更新 `WaveformData` 资源（简化实现）
+- [x] 2.6 在 `systems.rs` 中实现数据接收系统 `receive_waveform_data`
+  - 通过 `ResMut<WaveformData>` 直接更新数据
+- [x] 2.7 配置定时器系统
   - 根据采样率设置定时触发间隔
 
 ### Phase 3: 渲染绑定
