@@ -228,6 +228,99 @@ impl WaveformSettingsMessage {
 }
 
 // ============================================================================
+// WAVEFORM GENERATOR - Generates random waveform data for testing
+// ============================================================================
+
+use rand::Rng;
+
+/// 波形生成器，用于生成模拟波形数据（非 Resource，使用本地随机数生成）
+#[derive(Debug, Clone)]
+pub struct WaveformGenerator {
+	/// 采样率 (Hz)
+	pub sample_rate: u32,
+	/// 信号幅度
+	pub amplitude: f32,
+	/// 噪声级别
+	pub noise_level: f32,
+	/// 基础频率 (Hz)
+	pub base_frequency: f32,
+	/// 内部时间偏移
+	time: f32,
+}
+
+impl Default for WaveformGenerator {
+	fn default() -> Self {
+		Self::new(1000, 100.0, 5.0, 10.0)
+	}
+}
+
+impl WaveformGenerator {
+	/// 创建新的波形生成器
+	///
+	/// # Arguments
+	/// * `sample_rate` - 采样率 (Hz)
+	/// * `amplitude` - 信号幅度
+	/// * `noise_level` - 噪声级别
+	/// * `base_frequency` - 基础频率 (Hz)
+	pub fn new(sample_rate: u32, amplitude: f32, noise_level: f32, base_frequency: f32) -> Self {
+		Self {
+			sample_rate,
+			amplitude,
+			noise_level,
+			base_frequency,
+			time: 0.0,
+		}
+	}
+
+	/// 生成指定数量的波形数据点
+	///
+	/// # Arguments
+	/// * `count` - 生成的数据点数量
+	///
+	/// # Returns
+	/// 生成的波形数据向量
+	pub fn generate(&mut self, count: usize) -> Vec<f32> {
+		let dt = 1.0 / self.sample_rate as f32;
+		let mut rng = rand::rng();
+
+		let start_time = self.time;
+		self.time += count as f32 * dt;
+
+		(0..count)
+			.map(|i| {
+				let t = start_time + i as f32 * dt;
+				// 叠加正弦波和均匀分布噪声
+				let signal = (t * self.base_frequency * 2.0 * std::f32::consts::PI).sin();
+				let noise: f32 = (rng.random::<f32>() - 0.5) * 2.0 * self.noise_level;
+				signal * self.amplitude + noise
+			})
+			.collect()
+	}
+
+	/// 生成单点波形数据
+	///
+	/// # Returns
+	/// 生成的波形数据点
+	pub fn generate_single(&mut self) -> f32 {
+		let dt = 1.0 / self.sample_rate as f32;
+		let signal = (self.time * self.base_frequency * 2.0 * std::f32::consts::PI).sin();
+		let noise: f32 = (rand::rng().random::<f32>() - 0.5) * 2.0 * self.noise_level;
+		self.time += dt;
+		signal * self.amplitude + noise
+	}
+
+	/// 重置随机数生成器
+	pub fn reset(&mut self) {
+		self.time = 0.0;
+	}
+
+	/// 获取当前时间
+	pub fn current_time(&self) -> f32 {
+		self.time
+	}
+}
+
+// ============================================================================
 // TESTS
 // ============================================================================
 
@@ -235,6 +328,35 @@ impl WaveformSettingsMessage {
 mod tests {
 	use super::*;
 
+	// WaveformGenerator tests
+	#[test]
+	fn test_waveform_generator_new() {
+		let generator = WaveformGenerator::new(1000, 100.0, 5.0, 10.0);
+		assert_eq!(generator.sample_rate, 1000);
+		assert_eq!(generator.amplitude, 100.0);
+		assert_eq!(generator.noise_level, 5.0);
+		assert_eq!(generator.base_frequency, 10.0);
+	}
+
+	#[test]
+	fn test_waveform_generator_generate() {
+		let mut generator = WaveformGenerator::default();
+		let data = generator.generate(100);
+		assert_eq!(data.len(), 100);
+		// 检查数据是否在合理范围内（考虑噪声）
+		for v in &data {
+			assert!(v.abs() <= generator.amplitude + generator.noise_level * 3.0);
+		}
+	}
+
+	#[test]
+	fn test_waveform_generator_single() {
+		let mut generator = WaveformGenerator::default();
+		let value = generator.generate_single();
+		assert!(value.abs() <= generator.amplitude + generator.noise_level * 3.0);
+	}
+
+	// WaveformData tests
 	#[test]
 	fn test_waveform_data_new() {
 		let data = WaveformData::new(4, 1024);
@@ -272,6 +394,7 @@ mod tests {
 		assert_eq!(data.get_channel(5).len(), 0);
 	}
 
+	// RingBuffer tests
 	#[test]
 	fn test_ring_buffer_new() {
 		let buffer: RingBuffer<i32> = RingBuffer::new(5);
@@ -328,6 +451,7 @@ mod tests {
 		assert_eq!(items.len(), 4);
 	}
 
+	// WaveformSettingsMessage tests
 	#[test]
 	fn test_waveform_settings_message() {
 		let msg = WaveformSettingsMessage::default()

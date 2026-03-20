@@ -153,13 +153,13 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
 
 ### Phase 2: 数据生成
 
-- [ ] 2.1 在 `Cargo.toml` 中添加 `rand` 依赖
-- [ ] 2.2 在 `Cargo.toml` 中添加 `rand_distr` 依赖
-- [ ] 2.3 在 `resources.rs` 中实现 `WaveformGenerator` 结构体
+- [x] 2.1 在 `Cargo.toml` 中添加 `rand` 依赖
+- [x] 2.2 在 `resources.rs` 中实现 `WaveformGenerator` 结构体
   - 包含采样率、幅度、噪声级别等参数
-- [ ] 2.4 实现 `WaveformGenerator::generate()` 方法
-  - 生成高斯分布随机数
+- [x] 2.3 实现 `WaveformGenerator::generate()` 方法
+  - 生成均匀分布随机数（替代高斯分布）
   - 叠加正弦波模拟真实信号
+- [x] 2.4 实现 `WaveformGenerator::generate_single()` 方法
 - [ ] 2.5 在 `systems.rs` 中实现数据生成系统 `generate_waveform_data`
   - 使用 `Commands` 发送 `WaveformDataMessage`
 - [ ] 2.6 在 `systems.rs` 中实现数据接收系统 `receive_waveform_data`

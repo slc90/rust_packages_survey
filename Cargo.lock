@@ -4809,6 +4809,7 @@ dependencies = [
  "bevy",
  "config",
  "i18n",
+ "rand",
 ]
 
 [[package]]
