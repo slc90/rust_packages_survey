@@ -199,11 +199,11 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
   - 实时响应通道数变化
 - [x] 4.6 实现采样率下拉选择框
   - 点击切换采样率（循环500/1000/2000/4000 Hz）
-- [ ] 4.7 更新 `config.json` 配置结构
-  - 添加 `waveform` 配置项
-- [ ] 4.8 实现设置持久化
-  - 启动时加载配置
-  - 修改时保存配置
+- [x] 4.7 更新 `config.json` 配置结构
+  - 添加 `waveform` 配置项（channel_count, sample_rate, buffer_size）
+- [x] 4.8 实现设置持久化
+  - 启动时从配置加载波形设置
+  - 修改时保存配置（待实现）
 
 ## 6. 配置扩展
 
