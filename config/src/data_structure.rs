@@ -5,15 +5,38 @@ use bevy::{
 use i18n::data_structure::Language;
 use serde::{Deserialize, Serialize};
 
+/// 波形配置
+#[derive(Debug, Clone, Serialize, Deserialize, Resource)]
+pub struct WaveformConfig {
+	/// 通道数量
+	pub channel_count: usize,
+	/// 采样率 (Hz)
+	pub sample_rate: u32,
+	/// 最大显示点数
+	pub buffer_size: usize,
+}
+
+impl Default for WaveformConfig {
+	fn default() -> Self {
+		Self {
+			channel_count: 1,
+			sample_rate: 1000,
+			buffer_size: 4096,
+		}
+	}
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Resource)]
 pub struct Setting {
 	pub language: Language,
+	pub waveform: WaveformConfig,
 }
 
 impl Default for Setting {
 	fn default() -> Self {
 		Self {
 			language: Language::Chinese,
+			waveform: WaveformConfig::default(),
 		}
 	}
 }

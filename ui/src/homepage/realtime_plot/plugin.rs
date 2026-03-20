@@ -1,8 +1,8 @@
 use crate::homepage::common::Functions;
 use crate::homepage::realtime_plot::systems::{
-	WaveformSettings, generate_waveform_data, handle_channel_slider_click,
-	handle_sample_rate_click, init_waveform_generator, init_waveform_rendering, on_enter, on_exit,
-	spawn_axis_grid, spawn_waveform_settings_ui, update_waveform_display, update_waveform_settings,
+	generate_waveform_data, handle_channel_slider_click, handle_sample_rate_click,
+	init_waveform_generator, init_waveform_rendering, on_enter, on_exit, spawn_axis_grid,
+	spawn_waveform_settings_ui, update_waveform_display, update_waveform_settings,
 };
 use bevy::prelude::*;
 
@@ -15,9 +15,6 @@ pub struct RealtimePlotPlugin;
 
 impl Plugin for RealtimePlotPlugin {
 	fn build(&self, app: &mut App) {
-		// Initialize WaveformSettings resource
-		app.insert_resource(WaveformSettings::default());
-
 		// Add RealtimePlot state lifecycle systems
 		// Note: This assumes that `Functions` state has already been initialized
 		app.add_systems(

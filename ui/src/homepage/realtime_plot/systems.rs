@@ -4,6 +4,7 @@ use crate::homepage::realtime_plot::components::{
 	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker,
 };
 use crate::homepage::realtime_plot::resources::{WaveformData, WaveformGenerator};
+use config::data_structure::Setting;
 
 // ============================================================================
 // REALTIME_PLOT CONSTANTS
@@ -33,11 +34,21 @@ const CHANNEL_COLORS: [[f32; 4]; 8] = [
 // ============================================================================
 
 /// 进入RealtimePlot页面时触发，创建波形可视化资源
-pub fn on_enter(mut commands: Commands) {
+pub fn on_enter(mut commands: Commands, settings: Res<Setting>) {
 	info!("进入实时波形绘制页面");
-	// 初始化波形数据资源，默认1通道，4096点
-	let waveform_data = WaveformData::new(1, 4096);
+	// 从全局配置读取波形设置
+	let waveform_config = &settings.waveform;
+	// 初始化波形数据资源
+	let waveform_data =
+		WaveformData::new(waveform_config.channel_count, waveform_config.buffer_size);
 	commands.insert_resource(waveform_data);
+	// 插入波形设置资源
+	let waveform_settings = WaveformSettings {
+		channel_count: waveform_config.channel_count,
+		sample_rate: waveform_config.sample_rate,
+		max_points: waveform_config.buffer_size,
+	};
+	commands.insert_resource(waveform_settings);
 }
 
 /// 离开RealtimePlot页面时触发，清理资源
