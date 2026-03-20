@@ -1,6 +1,7 @@
 use crate::homepage::common::Functions;
 use crate::homepage::realtime_plot::systems::{
-	WaveformSettings, init_waveform_rendering, on_enter, on_exit, spawn_waveform_settings_ui,
+	WaveformSettings, handle_channel_slider_click, handle_sample_rate_click,
+	init_waveform_rendering, on_enter, on_exit, spawn_axis_grid, spawn_waveform_settings_ui,
 	update_waveform_display, update_waveform_settings,
 };
 use bevy::prelude::*;
@@ -25,10 +26,19 @@ impl Plugin for RealtimePlotPlugin {
 				on_enter,
 				init_waveform_rendering,
 				spawn_waveform_settings_ui,
+				spawn_axis_grid,
 			),
 		)
 		.add_systems(OnExit(Functions::RealtimePlot), on_exit)
 		// Add update systems
-		.add_systems(Update, (update_waveform_display, update_waveform_settings));
+		.add_systems(
+			Update,
+			(
+				update_waveform_display,
+				update_waveform_settings,
+				handle_channel_slider_click,
+				handle_sample_rate_click,
+			),
+		);
 	}
 }

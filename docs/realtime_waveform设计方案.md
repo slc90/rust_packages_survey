@@ -180,9 +180,10 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
   - 根据通道索引选择颜色
 - [x] 3.4 在 `WaveformData` 中实现滚动显示逻辑
   - 新数据从右侧移入，旧数据从左侧移出（RingBuffer）
-- [ ] 3.5 在 `systems.rs` 中实现坐标轴和网格绘制
-  - X轴时间刻度
-  - Y轴幅度刻度
+- [x] 3.5 在 `systems.rs` 中实现坐标轴和网格绘制
+  - X轴（每个通道的中心水平线）
+  - Y轴（垂直中心线）
+  - 垂直和水平网格线
 
 ### Phase 4: UI控制
 
@@ -194,11 +195,11 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
   - 包含通道数、采样率、最大显示点数
 - [x] 4.4 在 `plugin.rs` 中注册所有新系统
   - 注册 init_waveform_rendering, spawn_waveform_settings_ui, update_waveform_settings
-- [ ] 4.5 实现通道数滑动条交互
-  - 范围 1-32
+- [x] 4.5 实现通道数滑动条交互
+  - 点击增加通道数（循环1-32）
   - 实时响应通道数变化
-- [ ] 4.6 实现采样率下拉选择框
-  - 选项：500, 1000, 2000, 4000 Hz
+- [x] 4.6 实现采样率下拉选择框
+  - 点击切换采样率（循环500/1000/2000/4000 Hz）
 - [ ] 4.7 更新 `config.json` 配置结构
   - 添加 `waveform` 配置项
 - [ ] 4.8 实现设置持久化

@@ -181,6 +181,150 @@ pub fn cleanup_waveform_rendering(mut commands: Commands) {
 }
 
 // ============================================================================
+// WAVEFORM AXIS AND GRID
+// ============================================================================
+
+/// 坐标轴颜色
+const AXIS_COLOR: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
+/// 网格颜色
+const GRID_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
+
+/// 初始化坐标轴和网格
+pub fn spawn_axis_grid(
+	mut commands: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+	settings: Res<WaveformSettings>,
+) {
+	info!("Spawning axis and grid");
+
+	let channel_height = CHANNEL_HEIGHT;
+	let total_height = channel_height * settings.channel_count as f32;
+	let width = WAVEFORM_WIDTH;
+
+	// X轴（水平中心线）
+	for ch in 0..settings.channel_count {
+		let y_offset = (total_height / 2.0) - (ch as f32 * channel_height);
+		let x_axis_points = vec![
+			Vec2::new(-width / 2.0, y_offset),
+			Vec2::new(width / 2.0, y_offset),
+		];
+		let x_axis_mesh = meshes.add(Polyline2d::new(x_axis_points));
+		let axis_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
+			AXIS_COLOR[0],
+			AXIS_COLOR[1],
+			AXIS_COLOR[2],
+			AXIS_COLOR[3],
+		))));
+
+		commands.spawn((
+			Mesh2d(x_axis_mesh),
+			MeshMaterial2d(axis_mat),
+			Transform::from_xyz(0.0, 0.0, -0.1),
+		));
+	}
+
+	// Y轴（垂直中心线）
+	let y_axis_points = vec![Vec2::new(-width / 2.0, 0.0), Vec2::new(width / 2.0, 0.0)];
+	let y_axis_mesh = meshes.add(Polyline2d::new(y_axis_points));
+	let y_axis_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
+		AXIS_COLOR[0],
+		AXIS_COLOR[1],
+		AXIS_COLOR[2],
+		AXIS_COLOR[3],
+	))));
+
+	commands.spawn((
+		Mesh2d(y_axis_mesh),
+		MeshMaterial2d(y_axis_mat),
+		Transform::from_xyz(0.0, 0.0, -0.1),
+	));
+
+	// 垂直网格线
+	let grid_spacing = width / 10.0;
+	for i in 0..=10 {
+		let x = -width / 2.0 + i as f32 * grid_spacing;
+		let grid_points = vec![
+			Vec2::new(x, -total_height / 2.0),
+			Vec2::new(x, total_height / 2.0),
+		];
+		let grid_mesh = meshes.add(Polyline2d::new(grid_points));
+		let grid_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
+			GRID_COLOR[0],
+			GRID_COLOR[1],
+			GRID_COLOR[2],
+			GRID_COLOR[3],
+		))));
+
+		commands.spawn((
+			Mesh2d(grid_mesh),
+			MeshMaterial2d(grid_mat),
+			Transform::from_xyz(0.0, 0.0, -0.2),
+		));
+	}
+
+	// 水平网格线
+	for ch in 0..=settings.channel_count {
+		let y = (total_height / 2.0) - (ch as f32 * channel_height);
+		let grid_points = vec![Vec2::new(-width / 2.0, y), Vec2::new(width / 2.0, y)];
+		let grid_mesh = meshes.add(Polyline2d::new(grid_points));
+		let grid_mat = materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
+			GRID_COLOR[0],
+			GRID_COLOR[1],
+			GRID_COLOR[2],
+			GRID_COLOR[3],
+		))));
+
+		commands.spawn((
+			Mesh2d(grid_mesh),
+			MeshMaterial2d(grid_mat),
+			Transform::from_xyz(0.0, 0.0, -0.2),
+		));
+	}
+}
+
+// ============================================================================
+// UI INTERACTION SYSTEMS
+// ============================================================================
+
+/// 处理通道数滑动条点击
+pub fn handle_channel_slider_click(
+	mut settings: ResMut<WaveformSettings>,
+	interaction_query: Query<&Interaction, (Changed<Interaction>, With<ChannelSliderMarker>)>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			// 点击时增加通道数（循环）
+			settings.channel_count = if settings.channel_count >= CHANNEL_COUNT_MAX {
+				CHANNEL_COUNT_MIN
+			} else {
+				settings.channel_count + 1
+			};
+			info!("Channel count changed to {}", settings.channel_count);
+		}
+	}
+}
+
+/// 处理采样率下拉框点击
+pub fn handle_sample_rate_click(
+	mut settings: ResMut<WaveformSettings>,
+	interaction_query: Query<&Interaction, (Changed<Interaction>, With<SampleRateDropdownMarker>)>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			// 点击时切换到下一个采样率选项（循环）
+			let current_idx = SAMPLE_RATE_OPTIONS
+				.iter()
+				.position(|&r| r == settings.sample_rate)
+				.unwrap_or(0);
+			let next_idx = (current_idx + 1) % SAMPLE_RATE_OPTIONS.len();
+			settings.sample_rate = SAMPLE_RATE_OPTIONS[next_idx];
+			info!("Sample rate changed to {} Hz", settings.sample_rate);
+		}
+	}
+}
+
+// ============================================================================
 // WAVEFORM SETTINGS - UI settings for waveform display
 // ============================================================================
 
