@@ -186,18 +186,19 @@ fn generate_random_waveform(sample_count: usize) -> Vec<f32> {
 
 ### Phase 4: UI控制
 
-- [ ] 4.1 在 `components.rs` 中添加控制面板组件标记
-- [ ] 4.2 在 `systems.rs` 中实现控制面板 UI 生成系统
+- [x] 4.1 在 `components.rs` 中添加控制面板组件标记
+  - ControlPanelMarker, ChannelSliderMarker, SampleRateDropdownMarker
+- [x] 4.2 在 `systems.rs` 中实现控制面板 UI 生成系统
   - 创建控制面板容器
-- [ ] 4.3 在 `systems.rs` 中实现通道数滑动条
+- [x] 4.3 实现 `WaveformSettings` 资源管理
+  - 包含通道数、采样率、最大显示点数
+- [x] 4.4 在 `plugin.rs` 中注册所有新系统
+  - 注册 init_waveform_rendering, spawn_waveform_settings_ui, update_waveform_settings
+- [ ] 4.5 实现通道数滑动条交互
   - 范围 1-32
   - 实时响应通道数变化
-  - 动态增删波形实体
-- [ ] 4.4 在 `systems.rs` 中实现采样率下拉选择框
+- [ ] 4.6 实现采样率下拉选择框
   - 选项：500, 1000, 2000, 4000 Hz
-- [ ] 4.5 实现前台→后台设置更新
-  - 滑动条/下拉框变化时发送 `WaveformSettingsMessage`
-- [ ] 4.6 在 `plugin.rs` 中注册所有新系统
 - [ ] 4.7 更新 `config.json` 配置结构
   - 添加 `waveform` 配置项
 - [ ] 4.8 实现设置持久化

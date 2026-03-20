@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+use crate::homepage::realtime_plot::components::{
+	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker,
+};
 use crate::homepage::realtime_plot::resources::WaveformData;
 
 // ============================================================================
@@ -175,4 +178,115 @@ pub fn cleanup_waveform_rendering(mut commands: Commands) {
 	info!("清理波形渲染资源");
 	commands.remove_resource::<WaveformMeshes>();
 	commands.remove_resource::<WaveformMaterials>();
+}
+
+// ============================================================================
+// WAVEFORM SETTINGS - UI settings for waveform display
+// ============================================================================
+
+/// 波形设置资源
+#[derive(Resource, Debug, Clone)]
+pub struct WaveformSettings {
+	/// 通道数量
+	pub channel_count: usize,
+	/// 采样率 (Hz)
+	pub sample_rate: u32,
+	/// 最大显示点数
+	pub max_points: usize,
+}
+
+impl Default for WaveformSettings {
+	fn default() -> Self {
+		Self {
+			channel_count: 1,
+			sample_rate: 1000,
+			max_points: 4096,
+		}
+	}
+}
+
+/// 可用的采样率选项
+pub const SAMPLE_RATE_OPTIONS: [u32; 4] = [500, 1000, 2000, 4000];
+
+/// 通道数量范围
+pub const CHANNEL_COUNT_MIN: usize = 1;
+pub const CHANNEL_COUNT_MAX: usize = 32;
+
+/// 初始化波形设置UI
+pub fn spawn_waveform_settings_ui(mut commands: Commands) {
+	info!("Spawning waveform settings UI");
+
+	// 创建控制面板
+	commands
+		.spawn((
+			Node {
+				width: Val::Px(200.0),
+				height: Val::Percent(100.0),
+				flex_direction: FlexDirection::Column,
+				padding: UiRect::all(Val::Px(10.0)),
+				..Default::default()
+			},
+			BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.8)),
+			ControlPanelMarker,
+		))
+		.with_children(|parent| {
+			// 通道数标签
+			parent.spawn((
+				Text::new("Channel Count"),
+				TextFont {
+					font_size: 14.0,
+					..Default::default()
+				},
+				TextColor(Color::WHITE),
+			));
+
+			// 通道数滑动条（使用按钮模拟滑块行为）
+			parent.spawn((
+				Button,
+				ChannelSliderMarker,
+				Node {
+					width: Val::Px(180.0),
+					height: Val::Px(30.0),
+					margin: UiRect::all(Val::Px(5.0)),
+					..Default::default()
+				},
+			));
+
+			// 采样率标签
+			parent.spawn((
+				Text::new("Sample Rate"),
+				TextFont {
+					font_size: 14.0,
+					..Default::default()
+				},
+				TextColor(Color::WHITE),
+			));
+
+			// 采样率下拉框（使用按钮模拟）
+			parent.spawn((
+				Button,
+				SampleRateDropdownMarker,
+				Node {
+					width: Val::Px(180.0),
+					height: Val::Px(30.0),
+					margin: UiRect::all(Val::Px(5.0)),
+					..Default::default()
+				},
+			));
+		});
+}
+
+/// 更新波形设置
+pub fn update_waveform_settings(
+	settings: ResMut<WaveformSettings>,
+	mut waveform_data: ResMut<WaveformData>,
+) {
+	// 如果通道数变化，更新波形数据
+	if settings.channel_count != waveform_data.channel_count() {
+		waveform_data.clear();
+		// 重新创建通道数据
+		waveform_data
+			.channels
+			.resize(settings.channel_count, Vec::new());
+	}
 }

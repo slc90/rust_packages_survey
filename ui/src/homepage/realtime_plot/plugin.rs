@@ -1,5 +1,8 @@
 use crate::homepage::common::Functions;
-use crate::homepage::realtime_plot::systems::{on_enter, on_exit};
+use crate::homepage::realtime_plot::systems::{
+	WaveformSettings, init_waveform_rendering, on_enter, on_exit, spawn_waveform_settings_ui,
+	update_waveform_display, update_waveform_settings,
+};
 use bevy::prelude::*;
 
 /// Plugin for the RealtimePlot state
@@ -11,9 +14,21 @@ pub struct RealtimePlotPlugin;
 
 impl Plugin for RealtimePlotPlugin {
 	fn build(&self, app: &mut App) {
+		// Initialize WaveformSettings resource
+		app.insert_resource(WaveformSettings::default());
+
 		// Add RealtimePlot state lifecycle systems
 		// Note: This assumes that `Functions` state has already been initialized
-		app.add_systems(OnEnter(Functions::RealtimePlot), on_enter)
-			.add_systems(OnExit(Functions::RealtimePlot), on_exit);
+		app.add_systems(
+			OnEnter(Functions::RealtimePlot),
+			(
+				on_enter,
+				init_waveform_rendering,
+				spawn_waveform_settings_ui,
+			),
+		)
+		.add_systems(OnExit(Functions::RealtimePlot), on_exit)
+		// Add update systems
+		.add_systems(Update, (update_waveform_display, update_waveform_settings));
 	}
 }
