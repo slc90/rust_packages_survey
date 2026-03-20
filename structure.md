@@ -11,10 +11,11 @@ rust_packages_survey/
 │       └── release.yml                     # 发布流程配置
 ├── docs/                                   # 项目文档
 │   ├── helpers.md                          # 辅助文档记录
-│   ├── requirements.md                     # 功能需求列表
-│   ├── title_bar_implementation.md         # 标题栏实现文档
 │   ├── homepage_content_area_switch.md     # 主页内容区域切换功能实现方案
+│   ├── realtime_plot.md                    # 实时波形画图方案
+│   ├── requirements.md                     # 功能需求列表
 │   ├── setting_implementation.md           # 设置页面实现方案
+│   ├── title_bar_implementation.md         # 标题栏实现文档
 │   └── unresolved_issues.md                # 遗留问题记录
 ├── embedded_assets/                        # 嵌入式资源crate
 │   ├── Cargo.toml
@@ -25,18 +26,19 @@ rust_packages_survey/
 │   │   ├── maximize.png                    # 最大化按钮图标
 │   │   └── minimize.png                    # 最小化按钮图标
 │   └── src/                                # 源代码
-│       ├── lib.rs                          # 库入口点
 │       ├── const_assets_path.rs            # 常量资源路径定义
+│       ├── lib.rs                          # 库入口点
 │       └── plugin.rs                       # Bevy插件定义
 ├── entry/                                  # 主程序crate
 │   ├── Cargo.toml
+│   ├── build.rs                            # 构建脚本
 │   └── src/
 │       └── main.rs                         # 程序入口点
 ├── i18n/                                   # 国际化库crate
 │   ├── Cargo.toml
 │   └── src/                                # 源代码
-│       ├── lib.rs                          # 库入口点
 │       ├── data_structure.rs               # 数据结构定义
+│       ├── lib.rs                          # 库入口点
 │       ├── locale_en.rs                    # 英文本地化
 │       └── locale_zh.rs                    # 中文本地化
 ├── logger/                                 # 日志库crate
@@ -48,43 +50,45 @@ rust_packages_survey/
 │   ├── config_file/                        # 配置文件目录
 │   │   └── config.json                     # 默认配置文件
 │   └── src/                                # 源代码
-│       ├── lib.rs                          # 库入口点
-│       └── data_structure.rs               # 数据结构定义（Setting结构等）
+│       ├── data_structure.rs               # 数据结构定义（Setting结构等）
+│       └── lib.rs                          # 库入口点
 ├── logs/                                   # 日志文件目录
 ├── ui/                                     # 用户界面库crate
 │   ├── Cargo.toml
+│   ├── examples/                           # 示例代码
+│   │   └── static_plot_line.rs            # 静态波形画图示例
 │   └── src/                                # 源代码
 │       ├── homepage/                       # 主页功能模块
-│       │   ├── about/                      # 关于页面功能
+│       │   ├── about/                     # 关于页面功能
 │       │   │   ├── components.rs           # 组件定义
-│       │   │   ├── plugin.rs               # 插件定义
-│       │   │   └── systems.rs              # 系统定义
-│       │   ├── test/                       # 测试页面功能
-│       │   │   ├── components.rs           # 组件定义
-│       │   │   ├── plugin.rs               # 插件定义
-│       │   │   └── systems.rs              # 系统定义
-│       │   ├── setting/                    # 设置页面功能
-│       │   │   ├── components.rs           # 组件定义
-│       │   │   ├── plugin.rs               # 插件定义
-│       │   │   └── systems.rs              # 系统定义
-│       │   ├── about.rs                    # 关于页面模块导出
-│       │   ├── common.rs                   # 公共组件和状态定义
-│       │   ├── plugin.rs                   # 主页主插件定义
-│       │   ├── test.rs                     # 测试页面模块导出
-│       │   └── setting.rs                  # 设置页面模块导出
-│       ├── menu_bar/                       # 菜单栏模块
-│       │   ├── components.rs               # 组件定义
-│       │   ├── plugin.rs                   # 插件定义
-│       │   └── systems.rs                  # 系统定义
-│       ├── title_bar/                      # 标题栏模块
-│       │   ├── components.rs               # ECS组件定义
-│       │   ├── plugin.rs                   # Bevy插件定义
-│       │   ├── resources.rs                # 资源定义
-│       │   └── systems.rs                  # 系统定义
-│       ├── homepage.rs                     # 主页模块导出
-│       ├── lib.rs                          # 库入口点
-│       ├── menu_bar.rs                     # 菜单栏模块导出
-│       └── title_bar.rs                    # 标题栏模块导出
+│       │   │   ├── plugin.rs              # 插件定义
+│       │   │   └── systems.rs             # 系统定义
+│       │   ├── realtime_plot/             # 实时波形功能
+│       │   │   ├── components.rs          # 组件定义
+│       │   │   ├── plugin.rs              # 插件定义
+│       │   │   └── systems.rs             # 系统定义
+│       │   ├── setting/                   # 设置页面功能
+│       │   │   ├── components.rs          # 组件定义
+│       │   │   ├── plugin.rs              # 插件定义
+│       │   │   └── systems.rs             # 系统定义
+│       │   ├── about.rs                   # 关于页面模块导出
+│       │   ├── common.rs                  # 公共组件和状态定义
+│       │   ├── plugin.rs                  # 主页主插件定义
+│       │   ├── realtime_plot.rs           # 实时波形模块导出
+│       │   └── setting.rs                 # 设置页面模块导出
+│       ├── menu_bar/                      # 菜单栏模块
+│       │   ├── components.rs              # 组件定义
+│       │   ├── plugin.rs                  # 插件定义
+│       │   └── systems.rs                 # 系统定义
+│       ├── title_bar/                     # 标题栏模块
+│       │   ├── components.rs              # ECS组件定义
+│       │   ├── plugin.rs                  # Bevy插件定义
+│       │   ├── resources.rs               # 资源定义
+│       │   └── systems.rs                 # 系统定义
+│       ├── homepage.rs                    # 主页模块导出
+│       ├── lib.rs                         # 库入口点
+│       ├── menu_bar.rs                    # 菜单栏模块导出
+│       └── title_bar.rs                   # 标题栏模块导出
 ├── utils/                                  # 工具库crate
 │   ├── Cargo.toml
 │   └── src/
@@ -94,6 +98,7 @@ rust_packages_survey/
 ├── .pre-commit-config.yaml                 # commit钩子配置
 ├── Cargo.lock                              # 依赖版本锁文件
 ├── Cargo.toml                              # 工作空间根配置
+├── CLAUDE.md                               # Claude Code 指导文件
 ├── crates_survey.md                        # Rust包调研记录
 ├── rustfmt.toml                            # Rust代码格式化配置
 └── structure.md                            # 项目目录结构文档
