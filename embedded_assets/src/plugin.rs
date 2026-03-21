@@ -28,5 +28,6 @@ impl Plugin for EmbeddedAssetPlugin {
 		embedded_asset!(app, "../assets/minimize.png");
 		embedded_asset!(app, "../assets/maximize.png");
 		embedded_asset!(app, "../assets/close.png");
+		embedded_asset!(app, "../assets/shaders/medical_volume.wgsl");
 	}
 }

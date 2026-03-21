@@ -16,7 +16,7 @@ use crate::homepage::medical_image::resources::{
 	RenderMode,
 };
 use crate::homepage::medical_image::volume_render::{
-	VolumeRenderMaterial, build_render_params, build_volume_texture,
+	VolumeRenderMaterial, VolumeTextureBuildInfo, build_render_params, build_volume_texture,
 };
 use bevy::asset::RenderAssetUsages;
 use bevy::camera::{ClearColorConfig, Viewport};
@@ -31,8 +31,10 @@ use medical_image::{
 };
 use std::path::{Path, PathBuf};
 
-const SLICE_PANEL_SIZE: f32 = 320.0;
+const SLICE_IMAGE_SIZE: f32 = 240.0;
+const SLICE_PANEL_SIZE: f32 = 280.0;
 const VIEWPORT_HEIGHT: f32 = 360.0;
+const SLICE_PANEL_MIN_WIDTH: f32 = 260.0;
 const SURFACE_THRESHOLD_STEP: f32 = 25.0;
 const VOLUME_STEP_FACTOR: f32 = 0.85;
 
@@ -107,9 +109,10 @@ pub fn on_enter(
 						width: Val::Percent(100.0),
 						height: Val::Percent(100.0),
 						flex_direction: FlexDirection::Column,
+						align_items: AlignItems::Stretch,
 						padding: UiRect::all(Val::Px(12.0)),
 						row_gap: Val::Px(12.0),
-						overflow: Overflow::scroll_y(),
+						overflow: Overflow::scroll(),
 						..default()
 					},
 					BackgroundColor(Color::srgb(0.95, 0.96, 0.98)),
@@ -137,6 +140,7 @@ pub fn on_enter(
 
 					root.spawn((Node {
 						width: Val::Percent(100.0),
+						flex_shrink: 0.0,
 						flex_wrap: FlexWrap::Wrap,
 						column_gap: Val::Px(8.0),
 						row_gap: Val::Px(8.0),
@@ -161,16 +165,19 @@ pub fn on_enter(
 
 					root.spawn((Node {
 						width: Val::Percent(100.0),
+						flex_shrink: 0.0,
 						flex_direction: FlexDirection::Row,
+						flex_wrap: FlexWrap::Wrap,
 						column_gap: Val::Px(12.0),
-						justify_content: JustifyContent::SpaceBetween,
+						row_gap: Val::Px(12.0),
+						align_items: AlignItems::Start,
 						..default()
 					},))
 						.with_children(|panels| {
 							panels
 								.spawn(MedicalImagePanelBundle::new(
+									SLICE_PANEL_MIN_WIDTH,
 									SLICE_PANEL_SIZE,
-									SLICE_PANEL_SIZE + 40.0,
 								))
 								.with_children(|panel| {
 									panel.spawn((
@@ -184,13 +191,13 @@ pub fn on_enter(
 									panel.spawn(SliceImageBundle::new(
 										AxialSliceImageMarker,
 										textures[0].clone(),
-										SLICE_PANEL_SIZE - 16.0,
+										SLICE_IMAGE_SIZE,
 									));
 								});
 							panels
 								.spawn(MedicalImagePanelBundle::new(
+									SLICE_PANEL_MIN_WIDTH,
 									SLICE_PANEL_SIZE,
-									SLICE_PANEL_SIZE + 40.0,
 								))
 								.with_children(|panel| {
 									panel.spawn((
@@ -204,13 +211,13 @@ pub fn on_enter(
 									panel.spawn(SliceImageBundle::new(
 										CoronalSliceImageMarker,
 										textures[1].clone(),
-										SLICE_PANEL_SIZE - 16.0,
+										SLICE_IMAGE_SIZE,
 									));
 								});
 							panels
 								.spawn(MedicalImagePanelBundle::new(
+									SLICE_PANEL_MIN_WIDTH,
 									SLICE_PANEL_SIZE,
-									SLICE_PANEL_SIZE + 40.0,
 								))
 								.with_children(|panel| {
 									panel.spawn((
@@ -224,41 +231,44 @@ pub fn on_enter(
 									panel.spawn(SliceImageBundle::new(
 										SagittalSliceImageMarker,
 										textures[2].clone(),
-										SLICE_PANEL_SIZE - 16.0,
+										SLICE_IMAGE_SIZE,
 									));
 								});
 						});
 
-					root.spawn(MedicalImagePanelBundle::new(980.0, VIEWPORT_HEIGHT + 56.0))
-						.with_children(|panel| {
-							panel.spawn((
-								Text::new("三维预览"),
-								TextFont {
-									font_size: 16.0,
-									..default()
-								},
-								TextColor(Color::BLACK),
-							));
-							panel.spawn((
-								Text::new("方向键旋转，PageUp/PageDown 缩放"),
-								TextFont {
-									font_size: 13.0,
-									..default()
-								},
-								TextColor(Color::srgb(0.35, 0.35, 0.35)),
-							));
-							panel.spawn((
-								MedicalImageViewportMarker,
-								Node {
-									width: Val::Percent(100.0),
-									height: Val::Px(VIEWPORT_HEIGHT),
-									border: UiRect::all(Val::Px(1.0)),
-									..default()
-								},
-								BorderColor::all(Color::srgb(0.75, 0.78, 0.84)),
-								BackgroundColor(Color::srgb(0.10, 0.12, 0.15)),
-							));
-						});
+					root.spawn(MedicalImagePanelBundle::responsive(
+						760.0,
+						VIEWPORT_HEIGHT + 56.0,
+					))
+					.with_children(|panel| {
+						panel.spawn((
+							Text::new("三维预览"),
+							TextFont {
+								font_size: 16.0,
+								..default()
+							},
+							TextColor(Color::BLACK),
+						));
+						panel.spawn((
+							Text::new("方向键旋转，PageUp/PageDown 缩放"),
+							TextFont {
+								font_size: 13.0,
+								..default()
+							},
+							TextColor(Color::srgb(0.35, 0.35, 0.35)),
+						));
+						panel.spawn((
+							MedicalImageViewportMarker,
+							Node {
+								width: Val::Percent(100.0),
+								height: Val::Px(VIEWPORT_HEIGHT),
+								border: UiRect::all(Val::Px(1.0)),
+								..default()
+							},
+							BorderColor::all(Color::srgb(0.75, 0.78, 0.84)),
+							BackgroundColor(Color::srgb(0.10, 0.12, 0.15)),
+						));
+					});
 				});
 		});
 	}
@@ -715,16 +725,25 @@ pub fn rebuild_volume_render_entity(
 		commands.entity(entity).despawn();
 	}
 
-	let volume_texture = if scene.cached_volume_revision == Some(state.volume_revision) {
-		scene
-			.cached_volume_texture
-			.clone()
-			.unwrap_or_else(|| images.add(build_volume_texture(volume)))
+	let cache_hit = scene.cached_volume_revision == Some(state.volume_revision);
+	let (volume_texture, texture_build_info) = if cache_hit {
+		(
+			scene.cached_volume_texture.clone().unwrap_or_else(|| {
+				let build_result = build_volume_texture(volume);
+				images.add(build_result.image)
+			}),
+			VolumeTextureBuildInfo {
+				texture_dims: volume.dims,
+				downsample_factors: [1, 1, 1],
+			},
+		)
 	} else {
-		let texture = images.add(build_volume_texture(volume));
+		let build_result = build_volume_texture(volume);
+		let texture = images.add(build_result.image);
 		scene.cached_volume_texture = Some(texture.clone());
 		scene.cached_volume_revision = Some(state.volume_revision);
-		texture
+		scene.cached_volume_material = None;
+		(texture, build_result.info)
 	};
 	let bounds_min = Vec3::from_array(volume.origin);
 	let size = Vec3::new(
@@ -734,7 +753,7 @@ pub fn rebuild_volume_render_entity(
 	);
 	let bounds_max = bounds_min + size;
 	let center = (bounds_min + bounds_max) * 0.5;
-	let material_handle = if scene.cached_volume_revision == Some(state.volume_revision) {
+	let material_handle = if cache_hit {
 		if let Some(material_handle) = scene.cached_volume_material.clone() {
 			if let Some(material) = materials.get_mut(&material_handle) {
 				material.render_params = build_render_params(
@@ -745,6 +764,7 @@ pub fn rebuild_volume_render_entity(
 				);
 				material.bounds_min = bounds_min.extend(0.0);
 				material.bounds_max = bounds_max.extend(0.0);
+				material.volume_texture = volume_texture.clone();
 			}
 			material_handle
 		} else {
@@ -801,6 +821,15 @@ pub fn rebuild_volume_render_entity(
 		light_transform.translation = center + Vec3::new(distance * 0.7, distance, distance * 0.9);
 	}
 	update_status_text(&mut state);
+	if texture_build_info.is_downsampled() {
+		state.status_text = format!(
+			"{} | 体渲染纹理已降采样到 {} x {} x {}",
+			state.status_text,
+			texture_build_info.texture_dims[0],
+			texture_build_info.texture_dims[1],
+			texture_build_info.texture_dims[2],
+		);
+	}
 }
 
 /// 同步 3D 相机视口和网格显隐
@@ -809,8 +838,20 @@ pub fn sync_3d_viewport(
 	preview_query: Query<(&ComputedNode, &UiGlobalTransform), With<MedicalImageViewportMarker>>,
 	window_query: Query<&Window, With<PrimaryWindow>>,
 	mut camera_query: Query<&mut Camera, With<MedicalImageCamera3dMarker>>,
-	mut mesh_query: Query<&mut Visibility, With<MedicalImageSurfaceMeshMarker>>,
-	mut volume_query: Query<&mut Visibility, With<MedicalImageVolumeBoxMarker>>,
+	mut mesh_query: Query<
+		&mut Visibility,
+		(
+			With<MedicalImageSurfaceMeshMarker>,
+			Without<MedicalImageVolumeBoxMarker>,
+		),
+	>,
+	mut volume_query: Query<
+		&mut Visibility,
+		(
+			With<MedicalImageVolumeBoxMarker>,
+			Without<MedicalImageSurfaceMeshMarker>,
+		),
+	>,
 ) {
 	let Some(mut camera) = camera_query.iter_mut().next() else {
 		return;
@@ -1027,13 +1068,14 @@ fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	state.reset_slice_index();
 	state.apply_default_windowing();
 	state.surface_mesh_stats = None;
-	state.surface_dirty = true;
-	state.volume_dirty = true;
+	state.surface_dirty = false;
+	state.volume_dirty = false;
 	state.surface_focus_center = [0.0, 0.0, 0.0];
 	state.surface_camera_distance = 400.0;
 	state.surface_camera_yaw = 0.75;
 	state.surface_camera_pitch = 0.45;
 	state.volume_step_size = 1.0 / 256.0;
+	state.render_mode = RenderMode::SliceOnly;
 	update_status_text(state);
 	state.status_text = format!(
 		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5}",

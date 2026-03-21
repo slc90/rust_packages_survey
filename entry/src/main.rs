@@ -7,7 +7,8 @@
 use bevy::{
 	log::{Level, LogPlugin},
 	prelude::*,
-	window::WindowResolution,
+	ui::IsDefaultUiCamera,
+	window::{PrimaryWindow, WindowResolution},
 };
 use config::{ConfigPlugin, Setting, data_structure::read_from_file_or_default};
 use embedded_assets::{
@@ -23,7 +24,7 @@ use ui::{
 	title_bar::{
 		components::{
 			TitleBarBundle, TitleBarButtonBundle, TitleBarButtonEnum, TitleBarLogoBundle,
-			TitleBarPlaceholderBundle, TitleBarTextBundle,
+			TitleBarMarker, TitleBarPlaceholderBundle, TitleBarTextBundle,
 		},
 		plugin::TitleBarPlugin,
 	},
@@ -69,6 +70,7 @@ fn main() {
 	app.add_plugins(ConfigPlugin);
 	// 初始化，设置默认进入的页面
 	app.add_systems(Startup, setup);
+	app.add_systems(Update, sync_root_layout);
 	app.run();
 }
 
@@ -93,8 +95,8 @@ fn setup(
 	// 设置语言
 	language_manager.set_current_language(setting.language);
 	// 生成相机用于UI渲染
-	commands.spawn(Camera2d);
-	// 创建标题栏
+	commands.spawn((Camera2d, IsDefaultUiCamera));
+	// 标题栏作为独立根节点
 	commands.spawn((
 		TitleBarBundle::default(),
 		BackgroundColor(Color::WHITE),
@@ -129,19 +131,44 @@ fn setup(
 			)
 		],
 	));
-	// 创建内容区域（位于标题栏下方）
+	// 内容区作为独立根节点
 	commands.spawn((
 		ContentAreaMarker,
 		Node {
-			width: Val::Percent(100.0),
-			height: Val::Percent(100.0),
 			position_type: PositionType::Absolute,
-			top: Val::Px(40.0),
-			bottom: Val::Px(0.0),
 			left: Val::Px(0.0),
-			right: Val::Px(0.0),
+			top: Val::Px(40.0),
+			overflow: Overflow::scroll(),
 			..default()
 		},
 		BackgroundColor(Color::WHITE),
 	));
+}
+
+fn sync_root_layout(
+	window_query: Query<&Window, With<PrimaryWindow>>,
+	mut title_bar_query: Query<&mut Node, With<TitleBarMarker>>,
+	mut content_area_query: Query<&mut Node, (With<ContentAreaMarker>, Without<TitleBarMarker>)>,
+) {
+	let Some(window) = window_query.iter().next() else {
+		return;
+	};
+	let window_width = window.resolution.width();
+	let content_height = (window.resolution.height() - 40.0).max(0.0);
+
+	for mut node in &mut title_bar_query {
+		node.position_type = PositionType::Absolute;
+		node.left = Val::Px(0.0);
+		node.top = Val::Px(0.0);
+		node.width = Val::Px(window_width);
+		node.height = Val::Px(40.0);
+	}
+
+	for mut node in &mut content_area_query {
+		node.position_type = PositionType::Absolute;
+		node.left = Val::Px(0.0);
+		node.top = Val::Px(40.0);
+		node.width = Val::Px(window_width);
+		node.height = Val::Px(content_height);
+	}
 }

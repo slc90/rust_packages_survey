@@ -176,8 +176,8 @@ impl Default for MenuBarBundle {
 		let style = MenuBarStyle::default();
 		Self {
 			node: Node {
-				width: Val::Percent(80.0),
 				height: Val::Px(style.height),
+				flex_shrink: 0.0,
 				flex_direction: FlexDirection::Row,
 				align_items: AlignItems::Center,
 				padding: style.padding,

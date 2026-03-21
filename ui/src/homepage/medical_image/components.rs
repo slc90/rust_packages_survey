@@ -122,6 +122,7 @@ impl<T: Component> MedicalImageButtonBundle<T> {
 			node: Node {
 				width: Val::Px(120.0),
 				height: Val::Px(36.0),
+				flex_shrink: 0.0,
 				padding: UiRect::all(Val::Px(6.0)),
 				justify_content: JustifyContent::Center,
 				align_items: AlignItems::Center,
@@ -148,6 +149,28 @@ impl MedicalImagePanelBundle {
 			node: Node {
 				width: Val::Px(width),
 				height: Val::Px(height),
+				min_width: Val::Px(width),
+				min_height: Val::Px(height),
+				flex_shrink: 0.0,
+				flex_direction: FlexDirection::Column,
+				padding: UiRect::all(Val::Px(8.0)),
+				row_gap: Val::Px(8.0),
+				..default()
+			},
+			background_color: BackgroundColor(Color::WHITE),
+		}
+	}
+
+	/// 创建铺满父容器的响应式面板
+	pub fn responsive(min_width: f32, height: f32) -> Self {
+		Self {
+			node: Node {
+				width: Val::Percent(100.0),
+				min_width: Val::Px(min_width),
+				height: Val::Px(height),
+				min_height: Val::Px(height),
+				flex_grow: 1.0,
+				flex_shrink: 1.0,
 				flex_direction: FlexDirection::Column,
 				padding: UiRect::all(Val::Px(8.0)),
 				row_gap: Val::Px(8.0),
@@ -177,6 +200,8 @@ impl<T: Component> SliceImageBundle<T> {
 			node: Node {
 				width: Val::Px(size),
 				height: Val::Px(size),
+				flex_shrink: 0.0,
+				align_self: AlignSelf::Center,
 				..default()
 			},
 			image_node: ImageNode::new(texture),

@@ -39,7 +39,9 @@ rust_packages_survey/
 │   │   ├── close.png                       # 关闭按钮图标
 │   │   ├── logo.png                        # 应用程序logo
 │   │   ├── maximize.png                    # 最大化按钮图标
-│   │   └── minimize.png                    # 最小化按钮图标
+│   │   ├── minimize.png                    # 最小化按钮图标
+│   │   └── shaders/
+│   │       └── medical_volume.wgsl         # 医学影像体渲染嵌入式 shader
 │   └── src/                                # 源代码
 │       ├── const_assets_path.rs            # 常量资源路径定义
 │       ├── lib.rs                          # 库入口点
@@ -93,7 +95,7 @@ rust_packages_survey/
 │       │   │   ├── plugin.rs              # 插件定义
 │       │   │   ├── resources.rs           # 医学影像状态、纹理和三维场景资源
 │       │   │   ├── systems.rs             # 医学影像加载、切片显示、表面重建、体渲染和交互系统
-│       │   │   └── volume_render.rs       # 体渲染材质与 3D 纹理构建工具
+│       │   │   └── volume_render.rs       # 体渲染材质、3D 纹理构建与降采样保护
 │       │   ├── playback_plot/             # 回放波形功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
