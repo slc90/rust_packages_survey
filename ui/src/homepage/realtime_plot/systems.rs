@@ -49,6 +49,9 @@ pub fn on_enter(mut commands: Commands, settings: Res<Setting>) {
 		max_points: waveform_config.buffer_size,
 	};
 	commands.insert_resource(waveform_settings);
+	// 初始化波形生成器和计时器
+	commands.insert_resource(WaveformGeneratorState::default());
+	commands.insert_resource(WaveformTimer::default());
 }
 
 /// 离开RealtimePlot页面时触发，清理资源
@@ -191,6 +194,15 @@ pub fn update_waveform_display(
 
 		// 生成波形点
 		let points = generate_waveform_points(channel_data, i, point_count.max(1));
+		if i == 0 && !points.is_empty() {
+			debug!(
+				"Channel 0: {} points, first={:?}, last={:?}",
+				points.len(),
+				points.first(),
+				points.last()
+			);
+		}
+
 		let new_mesh_handle = meshes.add(Polyline2d::new(points));
 
 		// 更新实体的网格
@@ -548,11 +560,10 @@ impl WaveformTimer {
 	}
 }
 
-/// 初始化波形生成器
-pub fn init_waveform_generator(mut commands: Commands) {
-	info!("初始化波形生成器");
-	commands.insert_resource(WaveformGeneratorState::default());
-	commands.insert_resource(WaveformTimer::default());
+/// 初始化波形生成器（已废弃，资源初始化移至 on_enter）
+/// @deprecated 资源现在在 on_enter 中初始化
+pub fn init_waveform_generator() {
+	debug!("初始化波形生成器 (废弃)");
 }
 
 /// 生成波形数据
@@ -566,7 +577,6 @@ pub fn generate_waveform_data(
 	settings: Option<Res<WaveformSettings>>,
 	time: Option<Res<Time>>,
 ) {
-	// 如果任何必需资源不可用，跳过
 	let (
 		Some(mut waveform_data),
 		Some(mut generator_state),
@@ -585,7 +595,9 @@ pub fn generate_waveform_data(
 	generator_state.generator.sample_rate = settings.sample_rate;
 
 	// 检查是否应该生成数据
-	if timer.update(time.delta_secs()) {
+	let dt = time.delta_secs();
+	let should_generate = timer.update(dt);
+	if should_generate {
 		// 为每个通道生成一个数据点
 		for ch in 0..settings.channel_count {
 			let value = generator_state.generator.generate_single();
