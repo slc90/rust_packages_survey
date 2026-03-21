@@ -241,8 +241,7 @@ pub fn update_waveform_display(
 		};
 
 		// 生成波形点
-		let points =
-			generate_waveform_points(channel_data, i, channel_count, point_count.max(1));
+		let points = generate_waveform_points(channel_data, i, channel_count, point_count.max(1));
 		if i == 0 && !points.is_empty() {
 			debug!(
 				"Channel 0: {} points, first={:?}, last={:?}",

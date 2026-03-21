@@ -14,6 +14,8 @@ pub enum Functions {
 	Setting,
 
 	RealtimePlot,
+
+	PlaybackPlot,
 }
 
 // ============================================================================

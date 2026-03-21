@@ -2226,6 +2226,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
+name = "edf_io"
+version = "0.1.1"
+dependencies = [
+ "edfplus",
+ "rand",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "edfplus"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "377887f83994a8b64de3577620d107f767d0ef820d3be53428b3a1edf6088e7e"
+dependencies = [
+ "chrono",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4808,6 +4827,7 @@ version = "0.1.1"
 dependencies = [
  "bevy",
  "config",
+ "edf_io",
  "i18n",
  "rand",
 ]

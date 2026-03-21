@@ -10,4 +10,5 @@ description = "UI components for Rust packages survey"
 bevy = { version = "0.18", features = ["experimental_bevy_ui_widgets"] }
 i18n = { path = "../i18n" }
 config = { path = "../config" }
+edf_io = { path = "../edf_io" }
 rand = "0.9"

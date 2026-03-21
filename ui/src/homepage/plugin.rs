@@ -1,5 +1,6 @@
 use crate::homepage::about::plugin::AboutPlugin;
 use crate::homepage::common::{ChangeFunctionMessage, Functions};
+use crate::homepage::playback_plot::plugin::PlaybackPlotPlugin;
 use crate::homepage::realtime_plot::plugin::RealtimePlotPlugin;
 use crate::homepage::setting::plugin::SettingPlugin;
 use bevy::prelude::*;
@@ -22,6 +23,7 @@ impl Plugin for HomepagePlugin {
 		// These plugins handle their own component registration and system setup
 		app.add_plugins(AboutPlugin);
 		app.add_plugins(RealtimePlotPlugin);
+		app.add_plugins(PlaybackPlotPlugin);
 		app.add_plugins(SettingPlugin);
 		// 注册systems
 		app.add_systems(Update, change_function);

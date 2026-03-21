@@ -12,11 +12,22 @@ rust_packages_survey/
 ├── docs/                                   # 项目文档
 │   ├── helpers.md                          # 辅助文档记录
 │   ├── homepage_content_area_switch.md     # 主页内容区域切换功能实现方案
+│   ├── playback_waveform设计方案.md        # 回放波形功能设计方案
 │   ├── realtime_plot.md                    # 实时波形画图方案
 │   ├── requirements.md                     # 功能需求列表
 │   ├── setting_implementation.md           # 设置页面实现方案
 │   ├── title_bar_implementation.md         # 标题栏实现文档
 │   └── unresolved_issues.md                # 遗留问题记录
+├── edf_io/                                 # EDF/BDF 文件读写库crate
+│   ├── Cargo.toml
+│   ├── src/                                # 源代码
+│   │   ├── bdf_writer.rs                   # BDF 写入与测试数据生成
+│   │   ├── generator.rs                    # EDF 测试数据生成与头部修正
+│   │   ├── lib.rs                          # 库入口点
+│   │   └── loader.rs                       # EDF 文件加载器
+│   └── tools/                              # 数据生成工具
+│       ├── generate_test_bdf.rs            # BDF 测试文件生成入口
+│       └── main.rs                         # EDF 测试文件生成入口
 ├── embedded_assets/                        # 嵌入式资源crate
 │   ├── Cargo.toml
 │   ├── assets/                             # 静态资源文件
@@ -63,6 +74,11 @@ rust_packages_survey/
 │       │   │   ├── components.rs           # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
 │       │   │   └── systems.rs             # 系统定义
+│       │   ├── playback_plot/             # 回放波形功能
+│       │   │   ├── components.rs          # 组件定义
+│       │   │   ├── plugin.rs              # 插件定义
+│       │   │   ├── resources.rs           # 回放数据和播放控制资源
+│       │   │   └── systems.rs             # 回放加载、绘制和交互系统
 │       │   ├── realtime_plot/             # 实时波形功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
@@ -73,6 +89,7 @@ rust_packages_survey/
 │       │   │   └── systems.rs             # 系统定义
 │       │   ├── about.rs                   # 关于页面模块导出
 │       │   ├── common.rs                  # 公共组件和状态定义
+│       │   ├── playback_plot.rs           # 回放波形模块导出
 │       │   ├── plugin.rs                  # 主页主插件定义
 │       │   ├── realtime_plot.rs           # 实时波形模块导出
 │       │   └── setting.rs                 # 设置页面模块导出
@@ -89,7 +106,7 @@ rust_packages_survey/
 │       ├── lib.rs                         # 库入口点
 │       ├── menu_bar.rs                    # 菜单栏模块导出
 │       └── title_bar.rs                   # 标题栏模块导出
-├── utils/                                  # 工具库crate
+├── utils/                                 # 工具库crate
 │   ├── Cargo.toml
 │   └── src/
 │       └── lib.rs                          # 工具库代码

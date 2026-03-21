@@ -6,7 +6,8 @@ members = [
     "ui",
     "embedded_assets",
     "i18n",
-    "config"
+    "config",
+    "edf_io"
 ]
 resolver = "2"
 

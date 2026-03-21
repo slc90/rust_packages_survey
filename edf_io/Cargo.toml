@@ -1,0 +1,20 @@
+[package]
+name = "edf_io"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "EDF+ file I/O library"
+
+[[bin]]
+name = "generate_test_edf"
+path = "tools/main.rs"
+
+[[bin]]
+name = "generate_test_bdf"
+path = "tools/generate_test_bdf.rs"
+
+[dependencies]
+edfplus = "0.1"
+rand = "0.9"
+thiserror = "2.0"

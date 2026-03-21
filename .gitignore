@@ -2,3 +2,4 @@
 /logs
 .claude/settings.local.json
 entry/logs/
+data/
