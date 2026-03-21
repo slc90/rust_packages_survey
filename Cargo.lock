@@ -2405,6 +2405,7 @@ dependencies = [
  "dicom-object",
  "dicom-transfer-syntax-registry",
  "image",
+ "ndarray",
  "num-traits",
  "rayon",
  "snafu",
@@ -5784,6 +5785,7 @@ dependencies = [
  "config",
  "edf_io",
  "i18n",
+ "medical_image",
  "rand",
 ]
 

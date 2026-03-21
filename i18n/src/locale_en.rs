@@ -10,5 +10,6 @@ pub fn lookup(language_key: LanguageKey) -> &'static str {
 		LanguageKey::Setting => "Settings",
 		LanguageKey::RealtimePlot => "Realtime Plot",
 		LanguageKey::PlaybackPlot => "Playback Plot",
+		LanguageKey::MedicalImage => "Medical Image",
 	}
 }

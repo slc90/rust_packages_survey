@@ -16,6 +16,8 @@ pub enum Functions {
 	RealtimePlot,
 
 	PlaybackPlot,
+
+	MedicalImage,
 }
 
 // ============================================================================

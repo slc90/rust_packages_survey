@@ -23,6 +23,10 @@ pub enum MedicalImageError {
 	EmptyVolume,
 	/// 非法窗宽参数
 	InvalidWindowWidth(f32),
+	/// I/O 错误
+	Io(String),
+	/// 数据格式错误
+	Format(String),
 }
 
 impl Display for MedicalImageError {
@@ -40,11 +44,19 @@ impl Display for MedicalImageError {
 			}
 			Self::EmptyVolume => write!(f, "体数据为空"),
 			Self::InvalidWindowWidth(width) => write!(f, "非法窗宽: {width}"),
+			Self::Io(message) => write!(f, "I/O 错误: {message}"),
+			Self::Format(message) => write!(f, "数据格式错误: {message}"),
 		}
 	}
 }
 
 impl Error for MedicalImageError {}
+
+impl From<std::io::Error> for MedicalImageError {
+	fn from(value: std::io::Error) -> Self {
+		Self::Io(value.to_string())
+	}
+}
 
 /// 医学影像模态
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -60,7 +60,9 @@ rust_packages_survey/
 ├── medical_image/                          # 医学影像基础库crate
 │   ├── Cargo.toml
 │   └── src/                                # 源代码
+│       ├── dicom_loader.rs                 # DICOM Series 读取工具
 │       ├── lib.rs                          # 库入口点
+│       ├── nifti_loader.rs                 # NIfTI 读取工具
 │       ├── slice.rs                        # 三视图切片工具
 │       ├── volume.rs                       # 统一体数据结构与错误类型
 │       └── windowing.rs                    # 窗宽窗位与灰度映射工具
@@ -82,6 +84,11 @@ rust_packages_survey/
 │       │   │   ├── components.rs           # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
 │       │   │   └── systems.rs             # 系统定义
+│       │   ├── medical_image/             # 医学影像功能
+│       │   │   ├── components.rs          # 组件定义
+│       │   │   ├── plugin.rs              # 插件定义
+│       │   │   ├── resources.rs           # 医学影像状态与纹理资源
+│       │   │   └── systems.rs             # 医学影像加载、切片显示和交互系统
 │       │   ├── playback_plot/             # 回放波形功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
@@ -97,6 +104,7 @@ rust_packages_survey/
 │       │   │   └── systems.rs             # 系统定义
 │       │   ├── about.rs                   # 关于页面模块导出
 │       │   ├── common.rs                  # 公共组件和状态定义
+│       │   ├── medical_image.rs           # 医学影像模块导出
 │       │   ├── playback_plot.rs           # 回放波形模块导出
 │       │   ├── plugin.rs                  # 主页主插件定义
 │       │   ├── realtime_plot.rs           # 实时波形模块导出

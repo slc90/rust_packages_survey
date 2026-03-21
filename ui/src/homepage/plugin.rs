@@ -1,5 +1,6 @@
 use crate::homepage::about::plugin::AboutPlugin;
 use crate::homepage::common::{ChangeFunctionMessage, Functions};
+use crate::homepage::medical_image::plugin::MedicalImagePlugin;
 use crate::homepage::playback_plot::plugin::PlaybackPlotPlugin;
 use crate::homepage::realtime_plot::plugin::RealtimePlotPlugin;
 use crate::homepage::setting::plugin::SettingPlugin;
@@ -24,6 +25,7 @@ impl Plugin for HomepagePlugin {
 		app.add_plugins(AboutPlugin);
 		app.add_plugins(RealtimePlotPlugin);
 		app.add_plugins(PlaybackPlotPlugin);
+		app.add_plugins(MedicalImagePlugin);
 		app.add_plugins(SettingPlugin);
 		// 注册systems
 		app.add_systems(Update, change_function);

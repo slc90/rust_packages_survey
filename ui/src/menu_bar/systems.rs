@@ -140,6 +140,20 @@ fn spawn_function_menu(
 						TextColor(Color::BLACK),
 					)],
 				),
+				(
+					FunctionMenuItemBundle::default(),
+					observe(
+						|_activated: On<Activate>,
+						 mut writer: MessageWriter<ChangeFunctionMessage>| {
+							debug!("点击医学影像按钮");
+							writer.write(ChangeFunctionMessage(Functions::MedicalImage));
+						}
+					),
+					children![(
+						Text::new(language_manager.lookup(LanguageKey::MedicalImage)),
+						TextColor(Color::BLACK),
+					)],
+				),
 			],
 		))
 		.id();

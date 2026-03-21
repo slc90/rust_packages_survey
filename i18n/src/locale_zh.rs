@@ -10,5 +10,6 @@ pub fn lookup(language_key: LanguageKey) -> &'static str {
 		LanguageKey::Setting => "设置",
 		LanguageKey::RealtimePlot => "实时波形",
 		LanguageKey::PlaybackPlot => "回放波形",
+		LanguageKey::MedicalImage => "医学影像",
 	}
 }
