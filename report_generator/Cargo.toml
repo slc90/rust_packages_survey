@@ -1,0 +1,16 @@
+[package]
+name = "report_generator"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Report export utilities for docx and pdf"
+
+[dependencies]
+thiserror = "2.0.12"
+docx-rs = "0.4.18"
+printpdf = { version = "0.9.0", features = ["images", "png"] }
+
+[dev-dependencies]
+plotters = "0.3.7"
+signal_processing = { path = "../signal_processing" }

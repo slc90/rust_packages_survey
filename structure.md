@@ -169,3 +169,9 @@ rust_packages_survey/
 > - add `signal_processing/` crate for sine generation, FFT, spectrum analysis and FIR/IIR filtering
 > - add `signal_processing/examples/` for sine waveform, FFT spectrum and filter comparison demos
 > - data processing plan now targets crate-level examples instead of Bevy UI integration in the first phase
+>
+> 2026-03-21 Report Update
+>
+> - add `report_generator/` crate for Word and PDF export
+> - add `report_generator/examples/` for minimal DOCX and PDF report generation
+> - report export uses `docx-rs` for `.docx`, `printpdf` for `.pdf`, and reuses chart PNG files as embedded images
