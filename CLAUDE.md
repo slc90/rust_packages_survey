@@ -32,6 +32,10 @@ cargo fmt --all -- --check
 
 # 搜索某个包
 cargo search xxx
+
+# 编译所有crate
+# 增加新依赖时用这个先编译一次
+cargo build --workspace
 ```
 
 ## 架构

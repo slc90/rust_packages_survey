@@ -1,0 +1,15 @@
+[package]
+name = "signal_processing"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Signal processing utilities for waveform analysis"
+
+[dependencies]
+thiserror = "2.0.12"
+rustfft = "6.4.1"
+plotters = "0.3.7"
+
+[dev-dependencies]
+rstest.workspace = true

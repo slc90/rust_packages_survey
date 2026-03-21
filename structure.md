@@ -163,3 +163,9 @@ rust_packages_survey/
 > - add `audio_player/` crate for local audio playback based on `rodio`
 > - add `ui/src/homepage/audio_player/` for audio file selection, play/pause and status display
 > - homepage `Functions`, menu bar and `i18n` now include the audio player entry
+>
+> 2026-03-21 Signal Processing Update
+>
+> - add `signal_processing/` crate for sine generation, FFT, spectrum analysis and FIR/IIR filtering
+> - add `signal_processing/examples/` for sine waveform, FFT spectrum and filter comparison demos
+> - data processing plan now targets crate-level examples instead of Bevy UI integration in the first phase

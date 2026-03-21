@@ -3,3 +3,4 @@
 .claude/settings.local.json
 entry/logs/
 data/
+signal_processing_output/
