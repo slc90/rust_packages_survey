@@ -29,11 +29,19 @@ impl Plugin for RealtimePlotPlugin {
 		)
 		.add_systems(OnExit(Functions::RealtimePlot), on_exit)
 		// Add update systems
-		.add_systems(Update, generate_waveform_data)
-		.add_systems(Update, (update_waveform_display, update_waveform_settings))
 		.add_systems(
 			Update,
-			(handle_channel_slider_click, handle_sample_rate_click),
+			generate_waveform_data.run_if(in_state(Functions::RealtimePlot)),
+		)
+		.add_systems(
+			Update,
+			(update_waveform_display, update_waveform_settings)
+				.run_if(in_state(Functions::RealtimePlot)),
+		)
+		.add_systems(
+			Update,
+			(handle_channel_slider_click, handle_sample_rate_click)
+				.run_if(in_state(Functions::RealtimePlot)),
 		);
 	}
 }

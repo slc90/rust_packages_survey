@@ -69,10 +69,6 @@ fn main() {
 	app.add_plugins(ConfigPlugin);
 	// 初始化，设置默认进入的页面
 	app.add_systems(Startup, setup);
-	app.add_systems(
-		Startup,
-		ui::homepage::realtime_plot::systems::on_enter.after(setup),
-	);
 	app.run();
 }
 

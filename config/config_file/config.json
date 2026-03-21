@@ -1,1 +1,8 @@
-{ "language": "Chinese" }
+{
+  "language": "Chinese",
+  "waveform": {
+    "channel_count": 64,
+    "sample_rate": 4000,
+    "buffer_size": 4096
+  }
+}

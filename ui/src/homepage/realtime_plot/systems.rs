@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 
+use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::realtime_plot::components::{
-	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker, WaveformMeshMarker,
+	ChannelSliderMarker, ControlPanelMarker, RealtimePlotContentMarker, SampleRateDropdownMarker,
+	WaveformMeshMarker,
 };
 use crate::homepage::realtime_plot::resources::{WaveformData, WaveformGenerator};
 use config::data_structure::Setting;
@@ -14,9 +16,8 @@ use config::data_structure::Setting;
 const WAVEFORM_WIDTH: f32 = 800.0;
 /// 波形显示区域高度（预留）
 #[allow(dead_code)]
-const WAVEFORM_HEIGHT: f32 = 400.0;
+const WAVEFORM_HEIGHT: f32 = 900.0;
 /// 每个通道的高度
-const CHANNEL_HEIGHT: f32 = 100.0;
 /// 通道颜色数组
 const CHANNEL_COLORS: [[f32; 4]; 8] = [
 	[0.2, 0.6, 0.9, 1.0], // 蓝色
@@ -34,9 +35,18 @@ const CHANNEL_COLORS: [[f32; 4]; 8] = [
 // ============================================================================
 
 /// 进入RealtimePlot页面时触发，创建波形可视化资源
-pub fn on_enter(mut commands: Commands, settings: Res<Setting>) {
+pub fn on_enter(
+	mut commands: Commands,
+	settings: Res<Setting>,
+	content_area_query: Query<Entity, With<ContentAreaMarker>>,
+) {
 	info!("进入实时波形绘制页面");
 	// 从全局配置读取波形设置
+	if let Ok(content_area) = content_area_query.single() {
+		commands
+			.entity(content_area)
+			.insert(BackgroundColor(Color::NONE));
+	}
 	let waveform_config = &settings.waveform;
 	// 初始化波形数据资源
 	let waveform_data =
@@ -55,10 +65,27 @@ pub fn on_enter(mut commands: Commands, settings: Res<Setting>) {
 }
 
 /// 离开RealtimePlot页面时触发，清理资源
-pub fn on_exit(mut commands: Commands) {
+pub fn on_exit(
+	mut commands: Commands,
+	query: Query<Entity, With<RealtimePlotContentMarker>>,
+	content_area_query: Query<Entity, With<ContentAreaMarker>>,
+) {
 	info!("离开实时波形绘制页面");
 	// 移除波形数据资源
+	for entity in &query {
+		commands.entity(entity).despawn();
+	}
+	if let Ok(content_area) = content_area_query.single() {
+		commands
+			.entity(content_area)
+			.insert(BackgroundColor(Color::WHITE));
+	}
 	commands.remove_resource::<WaveformData>();
+	commands.remove_resource::<WaveformSettings>();
+	commands.remove_resource::<WaveformGeneratorState>();
+	commands.remove_resource::<WaveformTimer>();
+	commands.remove_resource::<WaveformMeshes>();
+	commands.remove_resource::<WaveformMaterials>();
 }
 
 // ============================================================================
@@ -69,6 +96,15 @@ pub fn on_exit(mut commands: Commands) {
 pub fn get_channel_color(channel_index: usize) -> Color {
 	let color = CHANNEL_COLORS[channel_index % CHANNEL_COLORS.len()];
 	Color::Srgba(Srgba::new(color[0], color[1], color[2], color[3]))
+}
+
+fn channel_height(channel_count: usize) -> f32 {
+	WAVEFORM_HEIGHT / channel_count.max(1) as f32
+}
+
+fn channel_center_y(channel_index: usize, channel_count: usize) -> f32 {
+	let height = channel_height(channel_count);
+	WAVEFORM_HEIGHT / 2.0 - ((channel_index as f32) + 0.5) * height
 }
 
 /// 生成波形点数据
@@ -83,18 +119,24 @@ pub fn get_channel_color(channel_index: usize) -> Color {
 fn generate_waveform_points(
 	channel_data: &[f32],
 	channel_index: usize,
+	channel_count: usize,
 	point_count: usize,
 ) -> Vec<Vec2> {
 	// 如果没有数据或点数为0，返回一个默认点
 	if channel_data.is_empty() || point_count == 0 {
 		// 将波形显示在通道中心偏上位置，避免与x轴重叠
-		let y_offset = (CHANNEL_HEIGHT / 2.0) + 50.0 - (channel_index as f32 * CHANNEL_HEIGHT);
+		let y_offset = channel_center_y(channel_index, channel_count);
 		return vec![Vec2::new(0.0, y_offset)];
 	}
 
 	// 将波形显示在通道中心偏上位置，避免与x轴重叠
-	let y_offset = (CHANNEL_HEIGHT / 2.0) + 50.0 - (channel_index as f32 * CHANNEL_HEIGHT);
-	let step = (WAVEFORM_WIDTH / point_count as f32).max(1.0);
+	let y_offset = channel_center_y(channel_index, channel_count);
+	let current_channel_height = channel_height(channel_count);
+	let step = if point_count <= 1 {
+		0.0
+	} else {
+		WAVEFORM_WIDTH / (point_count - 1) as f32
+	};
 
 	channel_data
 		.iter()
@@ -103,7 +145,7 @@ fn generate_waveform_points(
 			let x = (i as f32 * step) - WAVEFORM_WIDTH / 2.0;
 			// 将值归一化到 [-1, 1] 范围，然后映射到通道高度
 			// 使用更大的振幅(通道高度的45%)使波形更明显
-			let y = (value / 100.0).clamp(-1.0, 1.0) * (CHANNEL_HEIGHT * 0.45) + y_offset;
+			let y = (value / 100.0).clamp(-1.0, 1.0) * (current_channel_height * 0.4) + y_offset;
 			Vec2::new(x, y)
 		})
 		.collect()
@@ -128,22 +170,21 @@ pub fn init_waveform_rendering(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
+	settings: Res<Setting>,
 ) {
 	info!("初始化波形渲染资源");
 
 	// 创建材质
-	let mat_handles: Vec<_> = CHANNEL_COLORS
-		.iter()
-		.map(|c| {
-			let color = Color::Srgba(Srgba::new(c[0], c[1], c[2], c[3]));
-			materials.add(color)
-		})
+	let channel_count = settings.waveform.channel_count.max(1);
+	let mat_handles: Vec<_> = (0..channel_count)
+		.map(|i| materials.add(get_channel_color(i)))
 		.collect();
 
 	// 创建初始网格（使用位于通道中心的水平线，与x轴有一定偏移确保可见）
 	// 注意：x轴在 y=50，而波形显示在 y=100 附近，避免重叠
-	let default_points = vec![Vec2::new(-400.0, 100.0), Vec2::new(400.0, 100.0)];
-	let mesh_handles: Vec<_> = (0..4)
+	let default_y = channel_center_y(0, channel_count);
+	let default_points = vec![Vec2::new(-400.0, default_y), Vec2::new(400.0, default_y)];
+	let mesh_handles: Vec<_> = (0..channel_count)
 		.map(|_| meshes.add(Mesh::from(Polyline2d::new(default_points.clone()))))
 		.collect();
 
@@ -153,6 +194,7 @@ pub fn init_waveform_rendering(
 			Mesh2d(mesh_handle.clone()),
 			MeshMaterial2d(mat_handle.clone()),
 			Transform::from_xyz(0.0, 0.0, 0.0),
+			RealtimePlotContentMarker,
 			WaveformMeshMarker,
 		));
 		info!("Created waveform entity {}", i);
@@ -185,6 +227,7 @@ pub fn update_waveform_display(
 	// }
 
 	let channels = waveform_data.get_all_channels();
+	let channel_count = channels.len().max(1);
 	let point_count = channels.first().map(|c| c.len()).unwrap_or(0);
 
 	// 获取所有波形实体并更新其网格
@@ -198,7 +241,8 @@ pub fn update_waveform_display(
 		};
 
 		// 生成波形点
-		let points = generate_waveform_points(channel_data, i, point_count.max(1));
+		let points =
+			generate_waveform_points(channel_data, i, channel_count, point_count.max(1));
 		if i == 0 && !points.is_empty() {
 			debug!(
 				"Channel 0: {} points, first={:?}, last={:?}",
@@ -248,14 +292,14 @@ pub fn spawn_axis_grid(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
-	settings: Option<Res<WaveformSettings>>,
+	settings: Res<Setting>,
 ) {
 	info!("Spawning axis and grid");
 
 	// 获取设置值（使用默认值兜底）
-	let channel_count = settings.map(|s| s.channel_count).unwrap_or(1);
-	let channel_height = CHANNEL_HEIGHT;
-	let total_height = channel_height * channel_count as f32;
+	let channel_count = settings.waveform.channel_count.max(1);
+	let channel_height = channel_height(channel_count);
+	let total_height = WAVEFORM_HEIGHT;
 	let width = WAVEFORM_WIDTH;
 
 	// 创建坐标轴材质
@@ -264,7 +308,7 @@ pub fn spawn_axis_grid(
 
 	// X轴（水平中心线）- 为每个通道创建一条中心线
 	for ch in 0..channel_count {
-		let y_offset = (total_height / 2.0) - (ch as f32 * channel_height);
+		let y_offset = channel_center_y(ch, channel_count);
 		// 确保至少有2个点来绘制线条
 		let x_axis_points = if width > 0.0 {
 			vec![
@@ -280,6 +324,7 @@ pub fn spawn_axis_grid(
 			Mesh2d(x_axis_mesh),
 			MeshMaterial2d(axis_mat.clone()),
 			Transform::from_xyz(0.0, 0.0, -0.1),
+			RealtimePlotContentMarker,
 		));
 	}
 
@@ -291,6 +336,7 @@ pub fn spawn_axis_grid(
 		Mesh2d(y_axis_mesh),
 		MeshMaterial2d(axis_mat.clone()),
 		Transform::from_xyz(0.0, 0.0, -0.1),
+		RealtimePlotContentMarker,
 	));
 
 	// 垂直网格线
@@ -308,6 +354,7 @@ pub fn spawn_axis_grid(
 				Mesh2d(grid_mesh),
 				MeshMaterial2d(grid_mat.clone()),
 				Transform::from_xyz(0.0, 0.0, -0.2),
+				RealtimePlotContentMarker,
 			));
 		}
 	}
@@ -322,6 +369,7 @@ pub fn spawn_axis_grid(
 			Mesh2d(grid_mesh),
 			MeshMaterial2d(grid_mat.clone()),
 			Transform::from_xyz(0.0, 0.0, -0.2),
+			RealtimePlotContentMarker,
 		));
 	}
 
@@ -426,6 +474,7 @@ pub fn spawn_waveform_settings_ui(mut commands: Commands) {
 				..Default::default()
 			},
 			BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.8)),
+			RealtimePlotContentMarker,
 			ControlPanelMarker,
 		))
 		.with_children(|parent| {

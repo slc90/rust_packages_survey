@@ -19,8 +19,8 @@ pub struct WaveformConfig {
 impl Default for WaveformConfig {
 	fn default() -> Self {
 		Self {
-			channel_count: 1,
-			sample_rate: 1000,
+			channel_count: 64,
+			sample_rate: 4000,
 			buffer_size: 4096,
 		}
 	}
