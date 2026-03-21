@@ -18,6 +18,8 @@ pub enum Functions {
 	PlaybackPlot,
 
 	MedicalImage,
+
+	VideoPlayer,
 }
 
 // ============================================================================

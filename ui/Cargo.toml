@@ -12,4 +12,5 @@ i18n = { path = "../i18n" }
 config = { path = "../config" }
 edf_io = { path = "../edf_io" }
 medical_image = { path = "../medical_image" }
+media_player = { path = "../media_player" }
 rand = "0.9"

@@ -7,6 +7,10 @@
 use bevy::{
 	log::{Level, LogPlugin},
 	prelude::*,
+	render::{
+		RenderPlugin,
+		settings::{Backends, WgpuSettings},
+	},
 	ui::IsDefaultUiCamera,
 	window::{PrimaryWindow, WindowResolution},
 };
@@ -54,6 +58,14 @@ fn main() {
 					..default()
 				}),
 				..default()
+			})
+			.set(RenderPlugin {
+				render_creation: WgpuSettings {
+					backends: preferred_backends(),
+					..default()
+				}
+				.into(),
+				..default()
 			}),
 	);
 	// 所有嵌入资源
@@ -72,6 +84,14 @@ fn main() {
 	app.add_systems(Startup, setup);
 	app.add_systems(Update, sync_root_layout);
 	app.run();
+}
+
+fn preferred_backends() -> Option<Backends> {
+	if cfg!(target_os = "windows") {
+		Some(Backends::DX12)
+	} else {
+		None
+	}
 }
 
 fn setup(

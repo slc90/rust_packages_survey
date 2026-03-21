@@ -18,4 +18,5 @@ pub enum LanguageKey {
 	RealtimePlot,
 	PlaybackPlot,
 	MedicalImage,
+	VideoPlayer,
 }

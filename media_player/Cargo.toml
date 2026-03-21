@@ -1,0 +1,13 @@
+[package]
+name = "media_player"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Video playback backend based on gstreamer-rs"
+
+[dependencies]
+gstreamer = "0.25.0"
+gstreamer-app = "0.25.0"
+gstreamer-video = "0.25.0"
+thiserror = "2.0.12"

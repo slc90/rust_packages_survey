@@ -142,3 +142,16 @@ rust_packages_survey/
 ├── crates_survey.md                        # Rust包调研记录
 ├── rustfmt.toml                            # Rust代码格式化配置
 └── structure.md                            # 项目目录结构文档
+> 2026-03-21 å¢žé‡æ›´æ–°
+>
+> - æ–°å¢ž `media_player/` crateï¼Œç”¨äºŽåŸºäºŽ `gstreamer-rs` çš„è§†é¢‘æ’­æ”¾å†…æ ¸
+> - æ–°å¢ž `ui/src/homepage/video_player/` æ¨¡å—ï¼Œç”¨äºŽä¸»çª—å£è§†é¢‘æ’­æ”¾é¡µé¢
+> - ä¸»é¡µ `Functions` çŠ¶æ€æ–°å¢ž `VideoPlayer`
+> - èœå•æ æ–°å¢žâ€œæ’­æ”¾è§†é¢‘â€å…¥å£
+> - `i18n` æ–°å¢ž `VideoPlayer` å›½é™…åŒ– key
+>
+> 2026-03-21 Incremental Update
+>
+> - add `media_player/` crate for GStreamer-based video playback
+> - add `ui/src/homepage/video_player/` with main-window player and popup player UI
+> - video player state now supports one main player slot plus one popup player slot
