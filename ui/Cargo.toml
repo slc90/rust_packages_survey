@@ -13,5 +13,6 @@ config = { path = "../config" }
 edf_io = { path = "../edf_io" }
 medical_image = { path = "../medical_image" }
 media_player = { path = "../media_player" }
+audio_player = { path = "../audio_player" }
 rand = "0.9"
 rfd = "0.15.4"

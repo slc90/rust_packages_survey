@@ -1,0 +1,11 @@
+[package]
+name = "audio_player"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Audio playback backend based on rodio"
+
+[dependencies]
+thiserror = "2.0.12"
+rodio = "0.22.2"

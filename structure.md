@@ -157,3 +157,9 @@ rust_packages_survey/
 > - video player state now supports one main player slot plus one popup player slot
 > - add `ui/src/file_dialog.rs` to unify native file picking through `rfd`
 > - `playback_plot` and `medical_image` now load input files from native file dialogs instead of fixed sample paths
+>
+> 2026-03-21 Audio Update
+>
+> - add `audio_player/` crate for local audio playback based on `rodio`
+> - add `ui/src/homepage/audio_player/` for audio file selection, play/pause and status display
+> - homepage `Functions`, menu bar and `i18n` now include the audio player entry

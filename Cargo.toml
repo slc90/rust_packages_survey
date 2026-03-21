@@ -4,6 +4,7 @@ members = [
     "logger",
     "utils",
     "ui",
+    "audio_player",
     "media_player",
     "medical_image",
     "embedded_assets",

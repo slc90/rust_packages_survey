@@ -1,4 +1,5 @@
 pub mod about;
+pub mod audio_player;
 pub mod common;
 pub mod medical_image;
 pub mod playback_plot;

@@ -20,6 +20,8 @@ pub enum Functions {
 	MedicalImage,
 
 	VideoPlayer,
+
+	AudioPlayer,
 }
 
 // ============================================================================

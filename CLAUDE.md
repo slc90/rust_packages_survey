@@ -29,6 +29,9 @@ cargo fmt --all
 
 # 检查格式化
 cargo fmt --all -- --check
+
+# 搜索某个包
+cargo search xxx
 ```
 
 ## 架构
