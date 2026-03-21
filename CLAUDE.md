@@ -77,3 +77,4 @@ cargo fmt --all -- --check
 2. 代码增加注释，使用中文
 3. 根据方案完成后记得修改 `docs/requirements.md` 中对应部分
 4. 提交前不能跳过hook
+5. git message用中文，要写清楚功能和修复的问题

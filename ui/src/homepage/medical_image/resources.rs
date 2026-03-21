@@ -12,6 +12,19 @@ pub enum RenderMode {
 	Volume3d,
 }
 
+/// 医学影像页面数据状态
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MedicalImageLoadState {
+	/// 尚未加载数据
+	Empty,
+	/// 当前有可用数据
+	Ready,
+	/// 当前处于处理阶段
+	Busy,
+	/// 上一次处理失败
+	Error,
+}
+
 /// 医学影像页面状态
 #[derive(Resource, Debug)]
 pub struct MedicalImageState {
@@ -51,6 +64,10 @@ pub struct MedicalImageState {
 	pub source_text: String,
 	/// 当前模态
 	pub modality: Option<VolumeModality>,
+	/// 当前页面数据状态
+	pub load_state: MedicalImageLoadState,
+	/// 当前数据版本号；每次加载新体数据后递增
+	pub volume_revision: u64,
 }
 
 impl Default for MedicalImageState {
@@ -74,6 +91,8 @@ impl Default for MedicalImageState {
 			status_text: "尚未加载医学影像数据".to_string(),
 			source_text: "文件: -".to_string(),
 			modality: None,
+			load_state: MedicalImageLoadState::Empty,
+			volume_revision: 0,
 		}
 	}
 }
@@ -128,4 +147,17 @@ pub struct MedicalImageTextures {
 pub struct MedicalImageSceneResources {
 	/// 表面网格材质
 	pub surface_material: Handle<StandardMaterial>,
+	/// 最近一次缓存的表面网格
+	pub cached_surface_mesh: Option<Handle<Mesh>>,
+	/// 最近一次缓存表面网格的阈值
+	pub cached_surface_threshold: Option<f32>,
+	/// 最近一次缓存表面网格对应的数据版本
+	pub cached_surface_revision: Option<u64>,
+	/// 最近一次缓存的体纹理
+	pub cached_volume_texture: Option<Handle<Image>>,
+	/// 最近一次缓存的体渲染材质
+	pub cached_volume_material:
+		Option<Handle<crate::homepage::medical_image::volume_render::VolumeRenderMaterial>>,
+	/// 最近一次缓存体纹理对应的数据版本
+	pub cached_volume_revision: Option<u64>,
 }

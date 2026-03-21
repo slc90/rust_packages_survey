@@ -12,7 +12,8 @@ use crate::homepage::medical_image::components::{
 	WindowWidthDecreaseButtonMarker, WindowWidthIncreaseButtonMarker,
 };
 use crate::homepage::medical_image::resources::{
-	MedicalImageSceneResources, MedicalImageState, MedicalImageTextures, RenderMode,
+	MedicalImageLoadState, MedicalImageSceneResources, MedicalImageState, MedicalImageTextures,
+	RenderMode,
 };
 use crate::homepage::medical_image::volume_render::{
 	VolumeRenderMaterial, build_render_params, build_volume_texture,
@@ -58,7 +59,15 @@ pub fn on_enter(
 		double_sided: true,
 		..default()
 	});
-	commands.insert_resource(MedicalImageSceneResources { surface_material });
+	commands.insert_resource(MedicalImageSceneResources {
+		surface_material,
+		cached_surface_mesh: None,
+		cached_surface_threshold: None,
+		cached_surface_revision: None,
+		cached_volume_texture: None,
+		cached_volume_material: None,
+		cached_volume_revision: None,
+	});
 
 	commands.spawn((
 		MedicalImageCamera3dMarker,
@@ -288,8 +297,10 @@ pub fn handle_load_ct_sample(
 ) {
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
+			state.load_state = MedicalImageLoadState::Busy;
 			let path = sample_nifti_path("SubjectUCI29_CT_acpc_f.nii");
 			if let Err(error) = load_sample_into_state(&path, &mut state) {
+				state.load_state = MedicalImageLoadState::Error;
 				state.status_text = format!("加载 CT 样例失败: {error}");
 			}
 		}
@@ -303,8 +314,10 @@ pub fn handle_load_mr_sample(
 ) {
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
+			state.load_state = MedicalImageLoadState::Busy;
 			let path = sample_nifti_path("SubjectUCI29_MR_acpc.nii");
 			if let Err(error) = load_sample_into_state(&path, &mut state) {
+				state.load_state = MedicalImageLoadState::Error;
 				state.status_text = format!("加载 MR 样例失败: {error}");
 			}
 		}
@@ -565,7 +578,7 @@ pub fn update_slice_images(
 pub fn rebuild_surface_mesh(
 	mut commands: Commands,
 	mut state: ResMut<MedicalImageState>,
-	scene: Res<MedicalImageSceneResources>,
+	mut scene: ResMut<MedicalImageSceneResources>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	surface_query: Query<Entity, With<MedicalImageSurfaceMeshMarker>>,
 	mut camera_query: Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
@@ -580,30 +593,60 @@ pub fn rebuild_surface_mesh(
 	if !state.surface_dirty {
 		return;
 	}
+	state.load_state = MedicalImageLoadState::Busy;
 
 	let Some(volume) = &state.volume else {
+		state.load_state = MedicalImageLoadState::Error;
 		state.status_text = "未加载体数据，无法重建表面".to_string();
 		state.surface_dirty = false;
 		return;
 	};
+	let reuse_cached_mesh = scene.cached_surface_revision == Some(state.volume_revision)
+		&& scene.cached_surface_threshold == Some(state.surface_threshold)
+		&& scene.cached_surface_mesh.is_some();
 
-	let mesh_data = match extract_isosurface(
-		volume,
-		SurfaceExtractOptions {
-			threshold: state.surface_threshold,
-		},
-	) {
-		Ok(mesh_data) => mesh_data,
-		Err(error) => {
-			state.surface_mesh_stats = None;
-			state.surface_dirty = false;
-			state.status_text = format!("表面重建失败: {error}");
+	let (stats, mesh_handle, center, distance) = if reuse_cached_mesh {
+		let Some(mesh_handle) = scene.cached_surface_mesh.clone() else {
 			return;
-		}
-	};
+		};
+		let stats = state
+			.surface_mesh_stats
+			.unwrap_or(medical_image::SurfaceMeshStats {
+				vertex_count: 0,
+				triangle_count: 0,
+			});
+		(
+			stats,
+			mesh_handle,
+			Vec3::from_array(state.surface_focus_center),
+			state.surface_camera_distance.max(120.0),
+		)
+	} else {
+		let mesh_data = match extract_isosurface(
+			volume,
+			SurfaceExtractOptions {
+				threshold: state.surface_threshold,
+			},
+		) {
+			Ok(mesh_data) => mesh_data,
+			Err(error) => {
+				state.surface_mesh_stats = None;
+				state.surface_dirty = false;
+				state.load_state = MedicalImageLoadState::Error;
+				state.status_text = format!("表面重建失败: {error}");
+				return;
+			}
+		};
 
-	let stats = mesh_data.stats();
-	let mesh_handle = meshes.add(build_surface_mesh_asset(&mesh_data));
+		let stats = mesh_data.stats();
+		let center = Vec3::from_array(mesh_data.center());
+		let distance = (mesh_data.diagonal_length() * 1.4).max(120.0);
+		let mesh_handle = meshes.add(build_surface_mesh_asset(&mesh_data));
+		scene.cached_surface_mesh = Some(mesh_handle.clone());
+		scene.cached_surface_threshold = Some(state.surface_threshold);
+		scene.cached_surface_revision = Some(state.volume_revision);
+		(stats, mesh_handle, center, distance)
+	};
 
 	for entity in &surface_query {
 		commands.entity(entity).despawn();
@@ -616,8 +659,6 @@ pub fn rebuild_surface_mesh(
 		Transform::default(),
 	));
 
-	let center = Vec3::from_array(mesh_data.center());
-	let distance = (mesh_data.diagonal_length() * 1.4).max(120.0);
 	state.surface_focus_center = center.to_array();
 	state.surface_camera_distance = distance;
 	if state.surface_camera_pitch.abs() < 0.05 {
@@ -628,6 +669,7 @@ pub fn rebuild_surface_mesh(
 	}
 	state.surface_mesh_stats = Some(stats);
 	state.surface_dirty = false;
+	state.load_state = MedicalImageLoadState::Ready;
 	state.render_mode = RenderMode::Surface3d;
 	apply_orbit_camera_transform(&state, &mut camera_query);
 	if let Some(mut light_transform) = light_query.iter_mut().next() {
@@ -637,12 +679,14 @@ pub fn rebuild_surface_mesh(
 }
 
 /// 重建体渲染实体和 3D 纹理
+#[allow(clippy::too_many_arguments)]
 pub fn rebuild_volume_render_entity(
 	mut commands: Commands,
 	mut state: ResMut<MedicalImageState>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut images: ResMut<Assets<Image>>,
 	mut materials: ResMut<Assets<VolumeRenderMaterial>>,
+	mut scene: ResMut<MedicalImageSceneResources>,
 	volume_query: Query<Entity, With<MedicalImageVolumeBoxMarker>>,
 	mut scene_transforms: ParamSet<(
 		Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
@@ -658,8 +702,10 @@ pub fn rebuild_volume_render_entity(
 	if !state.volume_dirty {
 		return;
 	}
+	state.load_state = MedicalImageLoadState::Busy;
 
 	let Some(volume) = &state.volume else {
+		state.load_state = MedicalImageLoadState::Error;
 		state.status_text = "未加载体数据，无法创建体渲染".to_string();
 		state.volume_dirty = false;
 		return;
@@ -669,7 +715,17 @@ pub fn rebuild_volume_render_entity(
 		commands.entity(entity).despawn();
 	}
 
-	let volume_texture = images.add(build_volume_texture(volume));
+	let volume_texture = if scene.cached_volume_revision == Some(state.volume_revision) {
+		scene
+			.cached_volume_texture
+			.clone()
+			.unwrap_or_else(|| images.add(build_volume_texture(volume)))
+	} else {
+		let texture = images.add(build_volume_texture(volume));
+		scene.cached_volume_texture = Some(texture.clone());
+		scene.cached_volume_revision = Some(state.volume_revision);
+		texture
+	};
 	let bounds_min = Vec3::from_array(volume.origin);
 	let size = Vec3::new(
 		volume.spacing[0] * volume.dims[0] as f32,
@@ -678,17 +734,49 @@ pub fn rebuild_volume_render_entity(
 	);
 	let bounds_max = bounds_min + size;
 	let center = (bounds_min + bounds_max) * 0.5;
-	let material_handle = materials.add(VolumeRenderMaterial {
-		render_params: build_render_params(
-			volume,
-			state.window_center,
-			state.window_width,
-			state.volume_step_size,
-		),
-		bounds_min: bounds_min.extend(0.0),
-		bounds_max: bounds_max.extend(0.0),
-		volume_texture,
-	});
+	let material_handle = if scene.cached_volume_revision == Some(state.volume_revision) {
+		if let Some(material_handle) = scene.cached_volume_material.clone() {
+			if let Some(material) = materials.get_mut(&material_handle) {
+				material.render_params = build_render_params(
+					volume,
+					state.window_center,
+					state.window_width,
+					state.volume_step_size,
+				);
+				material.bounds_min = bounds_min.extend(0.0);
+				material.bounds_max = bounds_max.extend(0.0);
+			}
+			material_handle
+		} else {
+			let material = materials.add(VolumeRenderMaterial {
+				render_params: build_render_params(
+					volume,
+					state.window_center,
+					state.window_width,
+					state.volume_step_size,
+				),
+				bounds_min: bounds_min.extend(0.0),
+				bounds_max: bounds_max.extend(0.0),
+				volume_texture: volume_texture.clone(),
+			});
+			scene.cached_volume_material = Some(material.clone());
+			material
+		}
+	} else {
+		let material = materials.add(VolumeRenderMaterial {
+			render_params: build_render_params(
+				volume,
+				state.window_center,
+				state.window_width,
+				state.volume_step_size,
+			),
+			bounds_min: bounds_min.extend(0.0),
+			bounds_max: bounds_max.extend(0.0),
+			volume_texture: volume_texture.clone(),
+		});
+		scene.cached_volume_material = Some(material.clone());
+		material
+	};
 	let mesh_handle = meshes.add(Cuboid::new(
 		size.x.max(1.0),
 		size.y.max(1.0),
@@ -706,6 +794,7 @@ pub fn rebuild_volume_render_entity(
 	state.surface_focus_center = center.to_array();
 	state.surface_camera_distance = distance;
 	state.volume_dirty = false;
+	state.load_state = MedicalImageLoadState::Ready;
 	state.render_mode = RenderMode::Volume3d;
 	apply_orbit_camera_transform(&state, &mut scene_transforms.p0());
 	if let Some(mut light_transform) = scene_transforms.p1().iter_mut().next() {
@@ -930,8 +1019,10 @@ fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	let volume = load_nifti_file(path).map_err(|error| error.to_string())?;
 	let dims = volume.dims;
 	let modality = volume.modality;
+	state.volume_revision = state.volume_revision.saturating_add(1);
 	state.volume = Some(volume);
 	state.modality = Some(modality);
+	state.load_state = MedicalImageLoadState::Ready;
 	state.source_text = format!("文件: {}", path.display());
 	state.reset_slice_index();
 	state.apply_default_windowing();
@@ -993,13 +1084,24 @@ fn update_status_text(state: &mut MedicalImageState) {
 		.unwrap_or_else(|| "未生成表面".to_string());
 
 	state.status_text = format!(
-		"尺寸: {dims_text} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5} | 表面: {mesh_text}",
+		"状态: {} | 尺寸: {dims_text} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5} | 表面: {mesh_text}",
+		load_state_label(state.load_state),
 		render_mode_label(state.render_mode),
 		state.window_center,
 		state.window_width,
 		state.surface_threshold,
 		state.volume_step_size
 	);
+}
+
+/// 页面状态文字
+fn load_state_label(state: MedicalImageLoadState) -> &'static str {
+	match state {
+		MedicalImageLoadState::Empty => "空闲",
+		MedicalImageLoadState::Ready => "就绪",
+		MedicalImageLoadState::Busy => "处理中",
+		MedicalImageLoadState::Error => "错误",
+	}
 }
 
 /// 应用轨道相机参数
