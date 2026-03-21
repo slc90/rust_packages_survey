@@ -87,11 +87,13 @@ fn generate_waveform_points(
 ) -> Vec<Vec2> {
 	// 如果没有数据或点数为0，返回一个默认点
 	if channel_data.is_empty() || point_count == 0 {
-		let y_offset = (CHANNEL_HEIGHT / 2.0) - (channel_index as f32 * CHANNEL_HEIGHT);
+		// 将波形显示在通道中心偏上位置，避免与x轴重叠
+		let y_offset = (CHANNEL_HEIGHT / 2.0) + 50.0 - (channel_index as f32 * CHANNEL_HEIGHT);
 		return vec![Vec2::new(0.0, y_offset)];
 	}
 
-	let y_offset = (CHANNEL_HEIGHT / 2.0) - (channel_index as f32 * CHANNEL_HEIGHT);
+	// 将波形显示在通道中心偏上位置，避免与x轴重叠
+	let y_offset = (CHANNEL_HEIGHT / 2.0) + 50.0 - (channel_index as f32 * CHANNEL_HEIGHT);
 	let step = (WAVEFORM_WIDTH / point_count as f32).max(1.0);
 
 	channel_data
@@ -100,7 +102,8 @@ fn generate_waveform_points(
 		.map(|(i, &value)| {
 			let x = (i as f32 * step) - WAVEFORM_WIDTH / 2.0;
 			// 将值归一化到 [-1, 1] 范围，然后映射到通道高度
-			let y = (value / 100.0).clamp(-1.0, 1.0) * (CHANNEL_HEIGHT / 2.0 - 10.0) + y_offset;
+			// 使用更大的振幅(通道高度的45%)使波形更明显
+			let y = (value / 100.0).clamp(-1.0, 1.0) * (CHANNEL_HEIGHT * 0.45) + y_offset;
 			Vec2::new(x, y)
 		})
 		.collect()
@@ -137,10 +140,11 @@ pub fn init_waveform_rendering(
 		})
 		.collect();
 
-	// 创建初始网格（使用简单的默认点，确保至少2个点）
-	let default_points = vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)];
+	// 创建初始网格（使用位于通道中心的水平线，与x轴有一定偏移确保可见）
+	// 注意：x轴在 y=50，而波形显示在 y=100 附近，避免重叠
+	let default_points = vec![Vec2::new(-400.0, 100.0), Vec2::new(400.0, 100.0)];
 	let mesh_handles: Vec<_> = (0..4)
-		.map(|_| meshes.add(Polyline2d::new(default_points.clone())))
+		.map(|_| meshes.add(Mesh::from(Polyline2d::new(default_points.clone()))))
 		.collect();
 
 	// 创建渲染波形用的实体
@@ -175,9 +179,10 @@ pub fn update_waveform_display(
 		return;
 	};
 
-	if !waveform_data.is_changed() {
-		return;
-	}
+	// 暂时移除is_changed()检查，强制每帧更新以便调试
+	// if !waveform_data.is_changed() {
+	//     return;
+	// }
 
 	let channels = waveform_data.get_all_channels();
 	let point_count = channels.first().map(|c| c.len()).unwrap_or(0);
@@ -203,7 +208,8 @@ pub fn update_waveform_display(
 			);
 		}
 
-		let new_mesh_handle = meshes.add(Polyline2d::new(points));
+		let new_mesh = Mesh::from(Polyline2d::new(points));
+		let new_mesh_handle = meshes.add(new_mesh);
 
 		// 更新实体的网格
 		*mesh2d = Mesh2d(new_mesh_handle);
@@ -602,6 +608,19 @@ pub fn generate_waveform_data(
 		for ch in 0..settings.channel_count {
 			let value = generator_state.generator.generate_single();
 			waveform_data.push(ch, value);
+		}
+		// 每秒打印一次数据状态
+		if timer.remaining < 0.001 {
+			let channels = waveform_data.get_all_channels();
+			let point_count = channels.first().map(|c| c.len()).unwrap_or(0);
+			if let Some(ch) = channels.first()
+				&& let Some(&last_val) = ch.last()
+			{
+				info!(
+					"Waveform: {} points, last={:.2}, generator_time={:.4}",
+					point_count, last_val, generator_state.generator.time
+				);
+			}
 		}
 	}
 }

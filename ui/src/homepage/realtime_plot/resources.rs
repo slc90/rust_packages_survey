@@ -245,7 +245,7 @@ pub struct WaveformGenerator {
 	/// 基础频率 (Hz)
 	pub base_frequency: f32,
 	/// 内部时间偏移
-	time: f32,
+	pub time: f32,
 }
 
 impl Default for WaveformGenerator {
