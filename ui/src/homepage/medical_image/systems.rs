@@ -1,26 +1,41 @@
 use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::medical_image::components::{
 	AxialSliceImageMarker, CoronalSliceImageMarker, LoadCtSampleButtonMarker,
-	LoadMrSampleButtonMarker, MedicalImageButtonBundle, MedicalImageContentMarker,
-	MedicalImagePanelBundle, MedicalImageSourceTextMarker, MedicalImageStatusTextMarker,
-	SagittalSliceImageMarker, SliceImageBundle, WindowCenterDecreaseButtonMarker,
-	WindowCenterIncreaseButtonMarker, WindowWidthDecreaseButtonMarker,
-	WindowWidthIncreaseButtonMarker,
+	LoadMrSampleButtonMarker, MedicalImageButtonBundle, MedicalImageCamera3dMarker,
+	MedicalImageContentMarker, MedicalImageLightMarker, MedicalImagePanelBundle,
+	MedicalImageSourceTextMarker, MedicalImageStatusTextMarker, MedicalImageSurfaceMeshMarker,
+	MedicalImageViewportMarker, RebuildSurfaceButtonMarker, SagittalSliceImageMarker,
+	SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
+	SurfaceThresholdDecreaseButtonMarker, SurfaceThresholdIncreaseButtonMarker,
+	WindowCenterDecreaseButtonMarker, WindowCenterIncreaseButtonMarker,
+	WindowWidthDecreaseButtonMarker, WindowWidthIncreaseButtonMarker,
 };
-use crate::homepage::medical_image::resources::{MedicalImageState, MedicalImageTextures};
+use crate::homepage::medical_image::resources::{
+	MedicalImageSceneResources, MedicalImageState, MedicalImageTextures, RenderMode,
+};
 use bevy::asset::RenderAssetUsages;
+use bevy::camera::{ClearColorConfig, Viewport};
+use bevy::mesh::Indices;
 use bevy::prelude::*;
-use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
-use medical_image::{SliceAxis, extract_slice, load_nifti_file, normalize_slice_to_u8};
+use bevy::render::render_resource::{Extent3d, PrimitiveTopology, TextureDimension, TextureFormat};
+use bevy::ui::UiGlobalTransform;
+use bevy::window::PrimaryWindow;
+use medical_image::{
+	SliceAxis, SurfaceExtractOptions, SurfaceMeshData, extract_isosurface, extract_slice,
+	load_nifti_file, normalize_slice_to_u8,
+};
 use std::path::{Path, PathBuf};
 
 const SLICE_PANEL_SIZE: f32 = 320.0;
+const VIEWPORT_HEIGHT: f32 = 360.0;
+const SURFACE_THRESHOLD_STEP: f32 = 25.0;
 
 /// 进入医学影像页面
 pub fn on_enter(
 	mut commands: Commands,
 	content_area_query: Query<Entity, With<ContentAreaMarker>>,
 	mut images: ResMut<Assets<Image>>,
+	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	info!("进入医学影像页面");
 
@@ -30,6 +45,37 @@ pub fn on_enter(
 		coronal: textures[1].clone(),
 		sagittal: textures[2].clone(),
 	});
+
+	let surface_material = materials.add(StandardMaterial {
+		base_color: Color::srgb(0.90, 0.92, 0.96),
+		perceptual_roughness: 0.55,
+		metallic: 0.05,
+		double_sided: true,
+		..default()
+	});
+	commands.insert_resource(MedicalImageSceneResources { surface_material });
+
+	commands.spawn((
+		MedicalImageCamera3dMarker,
+		Camera3d::default(),
+		Camera {
+			order: 1,
+			is_active: false,
+			clear_color: ClearColorConfig::None,
+			..default()
+		},
+		Transform::from_xyz(0.0, 0.0, 400.0).looking_at(Vec3::ZERO, Vec3::Y),
+	));
+	commands.spawn((
+		MedicalImageLightMarker,
+		PointLight {
+			intensity: 8_000_000.0,
+			shadows_enabled: true,
+			range: 20_000.0,
+			..default()
+		},
+		Transform::from_xyz(300.0, 300.0, 300.0),
+	));
 
 	let mut state = MedicalImageState::default();
 	let default_ct = sample_nifti_path("SubjectUCI29_CT_acpc_f.nii");
@@ -49,6 +95,7 @@ pub fn on_enter(
 						flex_direction: FlexDirection::Column,
 						padding: UiRect::all(Val::Px(12.0)),
 						row_gap: Val::Px(12.0),
+						overflow: Overflow::scroll_y(),
 						..default()
 					},
 					BackgroundColor(Color::srgb(0.95, 0.96, 0.98)),
@@ -76,91 +123,23 @@ pub fn on_enter(
 
 					root.spawn((Node {
 						width: Val::Percent(100.0),
-						flex_direction: FlexDirection::Row,
+						flex_wrap: FlexWrap::Wrap,
 						column_gap: Val::Px(8.0),
+						row_gap: Val::Px(8.0),
 						..default()
 					},))
 						.with_children(|buttons| {
-							buttons
-								.spawn(MedicalImageButtonBundle::new(LoadCtSampleButtonMarker))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("加载 CT 样例"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
-							buttons
-								.spawn(MedicalImageButtonBundle::new(LoadMrSampleButtonMarker))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("加载 MR 样例"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
-							buttons
-								.spawn(MedicalImageButtonBundle::new(
-									WindowCenterDecreaseButtonMarker,
-								))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("窗位 -"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
-							buttons
-								.spawn(MedicalImageButtonBundle::new(
-									WindowCenterIncreaseButtonMarker,
-								))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("窗位 +"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
-							buttons
-								.spawn(MedicalImageButtonBundle::new(
-									WindowWidthDecreaseButtonMarker,
-								))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("窗宽 -"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
-							buttons
-								.spawn(MedicalImageButtonBundle::new(
-									WindowWidthIncreaseButtonMarker,
-								))
-								.with_children(|button| {
-									button.spawn((
-										Text::new("窗宽 +"),
-										TextFont {
-											font_size: 14.0,
-											..default()
-										},
-										TextColor(Color::WHITE),
-									));
-								});
+							spawn_button(buttons, LoadCtSampleButtonMarker, "加载 CT 样例");
+							spawn_button(buttons, LoadMrSampleButtonMarker, "加载 MR 样例");
+							spawn_button(buttons, SliceModeButtonMarker, "切片模式");
+							spawn_button(buttons, SurfaceModeButtonMarker, "表面模式");
+							spawn_button(buttons, RebuildSurfaceButtonMarker, "重建表面");
+							spawn_button(buttons, SurfaceThresholdDecreaseButtonMarker, "阈值 -");
+							spawn_button(buttons, SurfaceThresholdIncreaseButtonMarker, "阈值 +");
+							spawn_button(buttons, WindowCenterDecreaseButtonMarker, "窗位 -");
+							spawn_button(buttons, WindowCenterIncreaseButtonMarker, "窗位 +");
+							spawn_button(buttons, WindowWidthDecreaseButtonMarker, "窗宽 -");
+							spawn_button(buttons, WindowWidthIncreaseButtonMarker, "窗宽 +");
 						});
 
 					root.spawn((Node {
@@ -232,19 +211,65 @@ pub fn on_enter(
 									));
 								});
 						});
+
+					root.spawn(MedicalImagePanelBundle::new(980.0, VIEWPORT_HEIGHT + 56.0))
+						.with_children(|panel| {
+							panel.spawn((
+								Text::new("三维预览"),
+								TextFont {
+									font_size: 16.0,
+									..default()
+								},
+								TextColor(Color::BLACK),
+							));
+							panel.spawn((
+								Text::new("方向键旋转，PageUp/PageDown 缩放"),
+								TextFont {
+									font_size: 13.0,
+									..default()
+								},
+								TextColor(Color::srgb(0.35, 0.35, 0.35)),
+							));
+							panel.spawn((
+								MedicalImageViewportMarker,
+								Node {
+									width: Val::Percent(100.0),
+									height: Val::Px(VIEWPORT_HEIGHT),
+									border: UiRect::all(Val::Px(1.0)),
+									..default()
+								},
+								BorderColor::all(Color::srgb(0.75, 0.78, 0.84)),
+								BackgroundColor(Color::srgb(0.10, 0.12, 0.15)),
+							));
+						});
 				});
 		});
 	}
 }
 
 /// 离开医学影像页面
-pub fn on_exit(mut commands: Commands, query: Query<Entity, With<MedicalImageContentMarker>>) {
+pub fn on_exit(
+	mut commands: Commands,
+	content_query: Query<Entity, With<MedicalImageContentMarker>>,
+	scene_query: Query<
+		Entity,
+		Or<(
+			With<MedicalImageCamera3dMarker>,
+			With<MedicalImageLightMarker>,
+			With<MedicalImageSurfaceMeshMarker>,
+		)>,
+	>,
+) {
 	info!("离开医学影像页面");
-	for entity in &query {
+	for entity in &content_query {
+		commands.entity(entity).despawn();
+	}
+	for entity in &scene_query {
 		commands.entity(entity).despawn();
 	}
 	commands.remove_resource::<MedicalImageState>();
 	commands.remove_resource::<MedicalImageTextures>();
+	commands.remove_resource::<MedicalImageSceneResources>();
 }
 
 /// 处理加载 CT 样例
@@ -277,6 +302,93 @@ pub fn handle_load_mr_sample(
 	}
 }
 
+/// 处理表面阈值减小
+pub fn handle_surface_threshold_decrease(
+	interaction_query: Query<
+		&Interaction,
+		(
+			Changed<Interaction>,
+			With<SurfaceThresholdDecreaseButtonMarker>,
+		),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.surface_threshold -= SURFACE_THRESHOLD_STEP;
+			state.surface_dirty = true;
+			update_status_text(&mut state);
+		}
+	}
+}
+
+/// 处理表面阈值增大
+pub fn handle_surface_threshold_increase(
+	interaction_query: Query<
+		&Interaction,
+		(
+			Changed<Interaction>,
+			With<SurfaceThresholdIncreaseButtonMarker>,
+		),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.surface_threshold += SURFACE_THRESHOLD_STEP;
+			state.surface_dirty = true;
+			update_status_text(&mut state);
+		}
+	}
+}
+
+/// 处理手动表面重建
+pub fn handle_rebuild_surface(
+	interaction_query: Query<
+		&Interaction,
+		(Changed<Interaction>, With<RebuildSurfaceButtonMarker>),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.render_mode = RenderMode::Surface3d;
+			state.surface_dirty = true;
+			update_status_text(&mut state);
+		}
+	}
+}
+
+/// 处理显示模式切换
+pub fn handle_render_mode_switch(
+	slice_mode_query: Query<&Interaction, (Changed<Interaction>, With<SliceModeButtonMarker>)>,
+	surface_mode_query: Query<&Interaction, (Changed<Interaction>, With<SurfaceModeButtonMarker>)>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	let mut changed = false;
+
+	for interaction in &slice_mode_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.render_mode = RenderMode::SliceOnly;
+			changed = true;
+		}
+	}
+
+	for interaction in &surface_mode_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.render_mode = RenderMode::Surface3d;
+			if state.surface_mesh_stats.is_none() {
+				state.surface_dirty = true;
+			}
+			changed = true;
+		}
+	}
+
+	if changed {
+		update_status_text(&mut state);
+	}
+}
+
 /// 处理窗位减小
 pub fn handle_window_center_decrease(
 	interaction_query: Query<
@@ -288,10 +400,7 @@ pub fn handle_window_center_decrease(
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			state.window_center -= 20.0;
-			state.status_text = format!(
-				"窗位/窗宽: {:.1} / {:.1}",
-				state.window_center, state.window_width
-			);
+			update_status_text(&mut state);
 		}
 	}
 }
@@ -307,10 +416,7 @@ pub fn handle_window_center_increase(
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			state.window_center += 20.0;
-			state.status_text = format!(
-				"窗位/窗宽: {:.1} / {:.1}",
-				state.window_center, state.window_width
-			);
+			update_status_text(&mut state);
 		}
 	}
 }
@@ -326,10 +432,7 @@ pub fn handle_window_width_decrease(
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			state.window_width = (state.window_width - 20.0).max(1.0);
-			state.status_text = format!(
-				"窗位/窗宽: {:.1} / {:.1}",
-				state.window_center, state.window_width
-			);
+			update_status_text(&mut state);
 		}
 	}
 }
@@ -345,10 +448,7 @@ pub fn handle_window_width_increase(
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
 			state.window_width += 20.0;
-			state.status_text = format!(
-				"窗位/窗宽: {:.1} / {:.1}",
-				state.window_center, state.window_width
-			);
+			update_status_text(&mut state);
 		}
 	}
 }
@@ -410,6 +510,172 @@ pub fn update_slice_images(
 	}
 }
 
+/// 重建表面网格并同步 3D 场景
+pub fn rebuild_surface_mesh(
+	mut commands: Commands,
+	mut state: ResMut<MedicalImageState>,
+	scene: Res<MedicalImageSceneResources>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	surface_query: Query<Entity, With<MedicalImageSurfaceMeshMarker>>,
+	mut camera_query: Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
+	mut light_query: Query<
+		&mut Transform,
+		(
+			With<MedicalImageLightMarker>,
+			Without<MedicalImageCamera3dMarker>,
+		),
+	>,
+) {
+	if !state.surface_dirty {
+		return;
+	}
+
+	let Some(volume) = &state.volume else {
+		state.status_text = "未加载体数据，无法重建表面".to_string();
+		state.surface_dirty = false;
+		return;
+	};
+
+	let mesh_data = match extract_isosurface(
+		volume,
+		SurfaceExtractOptions {
+			threshold: state.surface_threshold,
+		},
+	) {
+		Ok(mesh_data) => mesh_data,
+		Err(error) => {
+			state.surface_mesh_stats = None;
+			state.surface_dirty = false;
+			state.status_text = format!("表面重建失败: {error}");
+			return;
+		}
+	};
+
+	let stats = mesh_data.stats();
+	let mesh_handle = meshes.add(build_surface_mesh_asset(&mesh_data));
+
+	for entity in &surface_query {
+		commands.entity(entity).despawn();
+	}
+
+	commands.spawn((
+		MedicalImageSurfaceMeshMarker,
+		Mesh3d(mesh_handle),
+		MeshMaterial3d(scene.surface_material.clone()),
+		Transform::default(),
+	));
+
+	let center = Vec3::from_array(mesh_data.center());
+	let distance = (mesh_data.diagonal_length() * 1.4).max(120.0);
+	state.surface_focus_center = center.to_array();
+	state.surface_camera_distance = distance;
+	if state.surface_camera_pitch.abs() < 0.05 {
+		state.surface_camera_pitch = 0.35;
+	}
+	if state.surface_camera_yaw.abs() < 0.05 {
+		state.surface_camera_yaw = 0.75;
+	}
+	state.surface_mesh_stats = Some(stats);
+	state.surface_dirty = false;
+	state.render_mode = RenderMode::Surface3d;
+	apply_orbit_camera_transform(&state, &mut camera_query);
+	if let Some(mut light_transform) = light_query.iter_mut().next() {
+		light_transform.translation = center + Vec3::new(distance * 0.7, distance, distance * 0.9);
+	}
+	update_status_text(&mut state);
+}
+
+/// 同步 3D 相机视口和网格显隐
+pub fn sync_3d_viewport(
+	state: Res<MedicalImageState>,
+	preview_query: Query<(&ComputedNode, &UiGlobalTransform), With<MedicalImageViewportMarker>>,
+	window_query: Query<&Window, With<PrimaryWindow>>,
+	mut camera_query: Query<&mut Camera, With<MedicalImageCamera3dMarker>>,
+	mut mesh_query: Query<&mut Visibility, With<MedicalImageSurfaceMeshMarker>>,
+) {
+	let Some(mut camera) = camera_query.iter_mut().next() else {
+		return;
+	};
+
+	let surface_mode = state.render_mode == RenderMode::Surface3d;
+	camera.is_active = surface_mode;
+
+	for mut visibility in &mut mesh_query {
+		*visibility = if surface_mode {
+			Visibility::Visible
+		} else {
+			Visibility::Hidden
+		};
+	}
+
+	if !surface_mode {
+		return;
+	}
+
+	let Some((computed_node, ui_transform)) = preview_query.iter().next() else {
+		return;
+	};
+	let Some(window) = window_query.iter().next() else {
+		return;
+	};
+
+	let (_, _, center) = ui_transform.to_scale_angle_translation();
+	let size = computed_node.size();
+	let min = center - size * 0.5;
+	let mut viewport = Viewport {
+		physical_position: UVec2::new(min.x.max(0.0) as u32, min.y.max(0.0) as u32),
+		physical_size: UVec2::new(size.x.max(1.0) as u32, size.y.max(1.0) as u32),
+		depth: 0.0..1.0,
+	};
+	viewport.clamp_to_size(UVec2::new(
+		window.physical_width(),
+		window.physical_height(),
+	));
+	camera.viewport = Some(viewport);
+}
+
+/// 更新三维相机的简单轨道控制
+pub fn update_surface_preview_transform(
+	keyboard: Res<ButtonInput<KeyCode>>,
+	mut state: ResMut<MedicalImageState>,
+	mut camera_query: Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
+) {
+	if state.render_mode != RenderMode::Surface3d || state.surface_mesh_stats.is_none() {
+		return;
+	}
+
+	let mut changed = false;
+
+	if keyboard.pressed(KeyCode::ArrowLeft) {
+		state.surface_camera_yaw += 0.03;
+		changed = true;
+	}
+	if keyboard.pressed(KeyCode::ArrowRight) {
+		state.surface_camera_yaw -= 0.03;
+		changed = true;
+	}
+	if keyboard.pressed(KeyCode::ArrowUp) {
+		state.surface_camera_pitch = (state.surface_camera_pitch + 0.02).clamp(-1.2, 1.2);
+		changed = true;
+	}
+	if keyboard.pressed(KeyCode::ArrowDown) {
+		state.surface_camera_pitch = (state.surface_camera_pitch - 0.02).clamp(-1.2, 1.2);
+		changed = true;
+	}
+	if keyboard.pressed(KeyCode::PageUp) {
+		state.surface_camera_distance = (state.surface_camera_distance * 0.97).max(20.0);
+		changed = true;
+	}
+	if keyboard.pressed(KeyCode::PageDown) {
+		state.surface_camera_distance *= 1.03;
+		changed = true;
+	}
+
+	if changed {
+		apply_orbit_camera_transform(&state, &mut camera_query);
+	}
+}
+
 /// 同步文本显示
 pub fn sync_medical_image_texts(
 	state: Res<MedicalImageState>,
@@ -433,6 +699,22 @@ pub fn sync_medical_image_texts(
 	for mut text in &mut status_query {
 		text.0 = state.status_text.clone();
 	}
+}
+
+/// 创建统一按钮
+fn spawn_button<T: Component>(parent: &mut ChildSpawnerCommands<'_>, marker: T, label: &str) {
+	parent
+		.spawn(MedicalImageButtonBundle::new(marker))
+		.with_children(|button| {
+			button.spawn((
+				Text::new(label),
+				TextFont {
+					font_size: 14.0,
+					..default()
+				},
+				TextColor(Color::WHITE),
+			));
+		});
 }
 
 /// 创建占位纹理
@@ -481,11 +763,101 @@ fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	state.volume = Some(volume);
 	state.modality = Some(modality);
 	state.source_text = format!("文件: {}", path.display());
-	state.status_text = format!(
-		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: 三视图",
-		modality, dims[0], dims[1], dims[2]
-	);
 	state.reset_slice_index();
 	state.apply_default_windowing();
+	state.surface_mesh_stats = None;
+	state.surface_dirty = true;
+	state.surface_focus_center = [0.0, 0.0, 0.0];
+	state.surface_camera_distance = 400.0;
+	state.surface_camera_yaw = 0.75;
+	state.surface_camera_pitch = 0.45;
+	if state.render_mode == RenderMode::Surface3d {
+		state.surface_dirty = true;
+	}
+	update_status_text(state);
+	state.status_text = format!(
+		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1}",
+		modality,
+		dims[0],
+		dims[1],
+		dims[2],
+		render_mode_label(state.render_mode),
+		state.window_center,
+		state.window_width,
+		state.surface_threshold
+	);
 	Ok(())
+}
+
+/// 构建可用于 Bevy 的三角网格
+fn build_surface_mesh_asset(surface_mesh: &SurfaceMeshData) -> Mesh {
+	Mesh::new(
+		PrimitiveTopology::TriangleList,
+		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+	)
+	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, surface_mesh.positions.clone())
+	.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, surface_mesh.normals.clone())
+	.with_inserted_indices(Indices::U32(surface_mesh.indices.clone()))
+}
+
+/// 按当前状态更新状态文本
+fn update_status_text(state: &mut MedicalImageState) {
+	let dims_text = state
+		.volume
+		.as_ref()
+		.map(|volume| {
+			format!(
+				"{} x {} x {}",
+				volume.dims[0], volume.dims[1], volume.dims[2]
+			)
+		})
+		.unwrap_or_else(|| "-".to_string());
+	let mesh_text = state
+		.surface_mesh_stats
+		.map(|stats| {
+			format!(
+				"{} 顶点 / {} 三角形",
+				stats.vertex_count, stats.triangle_count
+			)
+		})
+		.unwrap_or_else(|| "未生成表面".to_string());
+
+	state.status_text = format!(
+		"尺寸: {dims_text} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 表面: {mesh_text}",
+		render_mode_label(state.render_mode),
+		state.window_center,
+		state.window_width,
+		state.surface_threshold
+	);
+}
+
+/// 应用轨道相机参数
+fn apply_orbit_camera_transform(
+	state: &MedicalImageState,
+	camera_query: &mut Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
+) {
+	let Some(mut camera_transform) = camera_query.iter_mut().next() else {
+		return;
+	};
+
+	let center = Vec3::from_array(state.surface_focus_center);
+	let distance = state.surface_camera_distance.max(1.0);
+	let yaw = state.surface_camera_yaw;
+	let pitch = state.surface_camera_pitch;
+	let offset = Vec3::new(
+		distance * yaw.cos() * pitch.cos(),
+		distance * pitch.sin(),
+		distance * yaw.sin() * pitch.cos(),
+	);
+	camera_transform.translation = center + offset;
+	camera_transform.look_at(center, Vec3::Y);
+}
+
+/// 渲染模式文字
+fn render_mode_label(mode: RenderMode) -> &'static str {
+	match mode {
+		RenderMode::SliceOnly => "切片",
+		RenderMode::Surface3d => "表面",
+		RenderMode::Volume3d => "体渲染",
+	}
 }

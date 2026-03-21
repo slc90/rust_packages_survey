@@ -32,6 +32,26 @@ pub struct LoadCtSampleButtonMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct LoadMrSampleButtonMarker;
 
+/// 阈值减小按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct SurfaceThresholdDecreaseButtonMarker;
+
+/// 阈值增大按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct SurfaceThresholdIncreaseButtonMarker;
+
+/// 表面重建按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct RebuildSurfaceButtonMarker;
+
+/// 切换到切片模式按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct SliceModeButtonMarker;
+
+/// 切换到表面模式按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct SurfaceModeButtonMarker;
+
 /// 窗位减小按钮
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct WindowCenterDecreaseButtonMarker;
@@ -47,6 +67,22 @@ pub struct WindowWidthDecreaseButtonMarker;
 /// 窗宽增大按钮
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct WindowWidthIncreaseButtonMarker;
+
+/// 三维预览区域标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct MedicalImageViewportMarker;
+
+/// 三维相机标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct MedicalImageCamera3dMarker;
+
+/// 三维灯光标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct MedicalImageLightMarker;
+
+/// 表面网格实体标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct MedicalImageSurfaceMeshMarker;
 
 /// 医学影像按钮 bundle
 #[derive(Bundle)]

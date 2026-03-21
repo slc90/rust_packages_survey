@@ -64,6 +64,7 @@ rust_packages_survey/
 │       ├── lib.rs                          # 库入口点
 │       ├── nifti_loader.rs                 # NIfTI 读取工具
 │       ├── slice.rs                        # 三视图切片工具
+│       ├── surface.rs                      # 阈值表面重建工具
 │       ├── volume.rs                       # 统一体数据结构与错误类型
 │       └── windowing.rs                    # 窗宽窗位与灰度映射工具
 ├── config/                                 # 配置管理库crate
@@ -87,8 +88,8 @@ rust_packages_survey/
 │       │   ├── medical_image/             # 医学影像功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
-│       │   │   ├── resources.rs           # 医学影像状态与纹理资源
-│       │   │   └── systems.rs             # 医学影像加载、切片显示和交互系统
+│       │   │   ├── resources.rs           # 医学影像状态、纹理和三维场景资源
+│       │   │   └── systems.rs             # 医学影像加载、切片显示、表面重建和交互系统
 │       │   ├── playback_plot/             # 回放波形功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
