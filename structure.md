@@ -155,3 +155,5 @@ rust_packages_survey/
 > - add `media_player/` crate for GStreamer-based video playback
 > - add `ui/src/homepage/video_player/` with main-window player and popup player UI
 > - video player state now supports one main player slot plus one popup player slot
+> - add `ui/src/file_dialog.rs` to unify native file picking through `rfd`
+> - `playback_plot` and `medical_image` now load input files from native file dialogs instead of fixed sample paths

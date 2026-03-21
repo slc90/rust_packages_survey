@@ -5,12 +5,13 @@
 use bevy::prelude::*;
 use edf_io::EdfLoader;
 
+use crate::file_dialog::pick_single_file;
 use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::playback_plot::components::{
-	FilePathDisplayMarker, NextPageButtonMarker, PageDisplayMarker, PlayButtonMarker,
-	PlayButtonTextMarker, PlaybackControlPanelMarker, PlaybackPlotContentMarker,
-	PlaybackWaveformMeshMarker, PositionDisplayMarker, PrevPageButtonMarker, SpeedButtonMarker,
-	SpeedButtonTextMarker,
+	FilePathDisplayMarker, NextPageButtonMarker, OpenFileButtonMarker, PageDisplayMarker,
+	PlayButtonMarker, PlayButtonTextMarker, PlaybackControlPanelMarker, PlaybackPlotContentMarker,
+	PlaybackWaveformMeshMarker, PlaybackWaveformSceneMarker, PositionDisplayMarker,
+	PrevPageButtonMarker, SpeedButtonMarker, SpeedButtonTextMarker,
 };
 use crate::homepage::playback_plot::resources::{
 	PlaybackControl, PlaybackData, PlaybackSpeed, PlaybackStatus,
@@ -81,28 +82,10 @@ pub fn on_enter(
 			.insert(BackgroundColor(Color::NONE));
 	}
 
-	let file_path = default_playback_file_path();
-	let playback_data = match EdfLoader::from_file(&file_path) {
-		Ok(loader) => PlaybackData {
-			file_path: loader.path().to_string(),
-			channels: loader.channels().to_vec(),
-			channel_count: loader.channel_count(),
-			sample_rate: loader.sample_rate(),
-			total_points: loader.total_points(),
-		},
-		Err(err) => {
-			error!("加载回放文件失败: {}", err);
-			PlaybackData::default()
-		}
-	};
-
-	let mut control = PlaybackControl::new(4096);
-	if playback_data.total_points > 0 {
-		control.total_pages = playback_data.total_points.div_ceil(control.page_size);
-	}
-
-	let timer = PlaybackTimer::new(playback_data.sample_rate.max(1));
-	let channel_count = playback_data.channel_count.max(1);
+	let control = PlaybackControl::new(4096);
+	let playback_data = PlaybackData::empty();
+	let timer = PlaybackTimer::new(1);
+	let channel_count = 1;
 
 	commands.insert_resource(playback_data);
 	commands.insert_resource(control);
@@ -150,19 +133,6 @@ fn channel_center_y(channel_index: usize, channel_count: usize) -> f32 {
 	WAVEFORM_HEIGHT / 2.0 - ((channel_index as f32) + 0.5) * height
 }
 
-fn default_playback_file_path() -> String {
-	let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-	let base_dir = manifest_dir
-		.parent()
-		.map(std::path::Path::to_path_buf)
-		.unwrap_or(manifest_dir);
-	base_dir
-		.join("data")
-		.join("test_64ch_4000hz_10min.edf")
-		.to_string_lossy()
-		.to_string()
-}
-
 fn init_waveform_rendering(
 	commands: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
@@ -188,6 +158,7 @@ fn init_waveform_rendering(
 			Transform::from_xyz(0.0, 0.0, 0.0),
 			PlaybackPlotContentMarker,
 			PlaybackWaveformMeshMarker,
+			PlaybackWaveformSceneMarker,
 		));
 	}
 }
@@ -222,6 +193,7 @@ fn spawn_axis_grid(
 			MeshMaterial2d(axis_mat.clone()),
 			Transform::from_xyz(0.0, 0.0, -0.1),
 			PlaybackPlotContentMarker,
+			PlaybackWaveformSceneMarker,
 		));
 	}
 
@@ -237,6 +209,7 @@ fn spawn_axis_grid(
 			MeshMaterial2d(grid_mat.clone()),
 			Transform::from_xyz(0.0, 0.0, -0.2),
 			PlaybackPlotContentMarker,
+			PlaybackWaveformSceneMarker,
 		));
 	}
 
@@ -251,7 +224,68 @@ fn spawn_axis_grid(
 			MeshMaterial2d(grid_mat.clone()),
 			Transform::from_xyz(0.0, 0.0, -0.2),
 			PlaybackPlotContentMarker,
+			PlaybackWaveformSceneMarker,
 		));
+	}
+}
+
+/// 处理打开回放文件
+#[allow(clippy::too_many_arguments)]
+pub fn handle_open_file(
+	mut commands: Commands,
+	interaction_query: Query<&Interaction, (Changed<Interaction>, With<OpenFileButtonMarker>)>,
+	scene_query: Query<Entity, With<PlaybackWaveformSceneMarker>>,
+	mut data: ResMut<PlaybackData>,
+	mut control: ResMut<PlaybackControl>,
+	mut timer: ResMut<PlaybackTimer>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+	for interaction in &interaction_query {
+		if !matches!(interaction, Interaction::Pressed) {
+			continue;
+		}
+
+		let initial_directory = default_playback_directory();
+		let Some(path) = pick_single_file(
+			Some(&initial_directory),
+			"选择 EDF/BDF 文件",
+			&[("脑电文件", &["edf", "bdf"])],
+		) else {
+			continue;
+		};
+
+		match load_playback_data(&path) {
+			Ok(loaded_data) => {
+				for entity in &scene_query {
+					commands.entity(entity).despawn();
+				}
+
+				*data = loaded_data;
+				control.status = PlaybackStatus::Paused;
+				control.position = 0;
+				control.speed = 1.0;
+				control.current_page = 0;
+				control.total_pages = data.total_points.div_ceil(control.page_size);
+				timer.set_sample_rate(data.sample_rate.max(1));
+
+				let channel_count = data.channel_count.max(1);
+				init_waveform_rendering(&mut commands, &mut meshes, &mut materials, channel_count);
+				spawn_axis_grid(&mut commands, &mut meshes, &mut materials, channel_count);
+			}
+			Err(error) => {
+				error!("加载回放文件失败: {}", error);
+				*data = PlaybackData {
+					file_path: format!("加载失败: {}", path.display()),
+					..PlaybackData::empty()
+				};
+				control.status = PlaybackStatus::Paused;
+				control.position = 0;
+				control.current_page = 0;
+				control.total_pages = 0;
+				timer.set_sample_rate(1);
+			}
+		}
 	}
 }
 
@@ -437,6 +471,28 @@ pub fn spawn_playback_control_ui(mut commands: Commands) {
 			parent
 				.spawn((
 					Button,
+					OpenFileButtonMarker,
+					Node {
+						width: Val::Px(180.0),
+						height: Val::Px(40.0),
+						margin: UiRect::all(Val::Px(5.0)),
+						..Default::default()
+					},
+				))
+				.with_children(|button| {
+					button.spawn((
+						Text::new("打开文件"),
+						TextFont {
+							font_size: 16.0,
+							..Default::default()
+						},
+						TextColor(Color::WHITE),
+					));
+				});
+
+			parent
+				.spawn((
+					Button,
 					PlayButtonMarker,
 					Node {
 						width: Val::Px(180.0),
@@ -544,6 +600,29 @@ pub fn spawn_playback_control_ui(mut commands: Commands) {
 				PageDisplayMarker,
 			));
 		});
+}
+
+/// 回放文件默认目录
+fn default_playback_directory() -> std::path::PathBuf {
+	let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+	let base_dir = manifest_dir
+		.parent()
+		.map(std::path::Path::to_path_buf)
+		.unwrap_or(manifest_dir);
+	base_dir.join("data")
+}
+
+/// 加载 EDF/BDF 文件到回放资源
+fn load_playback_data(path: &std::path::Path) -> Result<PlaybackData, String> {
+	let file_path = path.to_string_lossy().to_string();
+	let loader = EdfLoader::from_file(&file_path).map_err(|error| error.to_string())?;
+	Ok(PlaybackData {
+		file_path: loader.path().to_string(),
+		channels: loader.channels().to_vec(),
+		channel_count: loader.channel_count(),
+		sample_rate: loader.sample_rate(),
+		total_points: loader.total_points(),
+	})
 }
 
 pub fn update_playback_position_display(

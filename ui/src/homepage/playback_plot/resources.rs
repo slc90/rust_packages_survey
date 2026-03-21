@@ -56,6 +56,17 @@ impl PlaybackData {
 	pub fn total_points(&self) -> usize {
 		self.total_points
 	}
+
+	/// 创建未加载文件时的占位数据
+	pub fn empty() -> Self {
+		Self {
+			file_path: "-".to_string(),
+			channels: Vec::new(),
+			channel_count: 0,
+			sample_rate: 1,
+			total_points: 0,
+		}
+	}
 }
 
 // ============================================================================

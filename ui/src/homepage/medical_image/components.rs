@@ -24,13 +24,9 @@ pub struct CoronalSliceImageMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct SagittalSliceImageMarker;
 
-/// 加载 CT 样例按钮标记
+/// 打开医学影像文件按钮标记
 #[derive(Component, Default, Clone, Copy, Debug)]
-pub struct LoadCtSampleButtonMarker;
-
-/// 加载 MR 样例按钮标记
-#[derive(Component, Default, Clone, Copy, Debug)]
-pub struct LoadMrSampleButtonMarker;
+pub struct OpenMedicalImageFileButtonMarker;
 
 /// 阈值减小按钮
 #[derive(Component, Default, Clone, Copy, Debug)]

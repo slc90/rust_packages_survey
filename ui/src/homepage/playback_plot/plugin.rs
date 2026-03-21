@@ -4,9 +4,9 @@
 
 use crate::homepage::common::Functions;
 use crate::homepage::playback_plot::systems::{
-	handle_next_page, handle_play_pause, handle_prev_page, handle_speed_change, on_enter, on_exit,
-	spawn_playback_control_ui, update_playback, update_playback_position_display,
-	update_playback_waveform,
+	handle_next_page, handle_open_file, handle_play_pause, handle_prev_page, handle_speed_change,
+	on_enter, on_exit, spawn_playback_control_ui, update_playback,
+	update_playback_position_display, update_playback_waveform,
 };
 use bevy::prelude::*;
 
@@ -28,6 +28,7 @@ impl Plugin for PlaybackPlotPlugin {
 				update_playback,
 				update_playback_waveform,
 				update_playback_position_display,
+				handle_open_file,
 				handle_play_pause,
 				handle_speed_change,
 				handle_prev_page,

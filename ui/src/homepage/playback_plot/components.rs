@@ -16,6 +16,10 @@ pub struct PlaybackPlotContentMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct PlaybackControlPanelMarker;
 
+/// 打开文件按钮标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct OpenFileButtonMarker;
+
 /// 播放按钮标记
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct PlayButtonMarker;
@@ -59,3 +63,7 @@ pub struct PageDisplayMarker;
 /// 波形网格实体标记
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct PlaybackWaveformMeshMarker;
+
+/// 回放波形场景实体标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct PlaybackWaveformSceneMarker;

@@ -1,11 +1,12 @@
+use crate::file_dialog::pick_single_file;
 use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::medical_image::components::{
-	AxialSliceImageMarker, CoronalSliceImageMarker, LoadCtSampleButtonMarker,
-	LoadMrSampleButtonMarker, MedicalImageButtonBundle, MedicalImageCamera3dMarker,
-	MedicalImageContentMarker, MedicalImageLightMarker, MedicalImagePanelBundle,
-	MedicalImageSourceTextMarker, MedicalImageStatusTextMarker, MedicalImageSurfaceMeshMarker,
-	MedicalImageViewportMarker, MedicalImageVolumeBoxMarker, RebuildSurfaceButtonMarker,
-	SagittalSliceImageMarker, SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
+	AxialSliceImageMarker, CoronalSliceImageMarker, MedicalImageButtonBundle,
+	MedicalImageCamera3dMarker, MedicalImageContentMarker, MedicalImageLightMarker,
+	MedicalImagePanelBundle, MedicalImageSourceTextMarker, MedicalImageStatusTextMarker,
+	MedicalImageSurfaceMeshMarker, MedicalImageViewportMarker, MedicalImageVolumeBoxMarker,
+	OpenMedicalImageFileButtonMarker, RebuildSurfaceButtonMarker, SagittalSliceImageMarker,
+	SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
 	SurfaceThresholdDecreaseButtonMarker, SurfaceThresholdIncreaseButtonMarker,
 	VolumeModeButtonMarker, VolumeStepDecreaseButtonMarker, VolumeStepIncreaseButtonMarker,
 	WindowCenterDecreaseButtonMarker, WindowCenterIncreaseButtonMarker,
@@ -93,12 +94,7 @@ pub fn on_enter(
 		Transform::from_xyz(300.0, 300.0, 300.0),
 	));
 
-	let mut state = MedicalImageState::default();
-	let default_ct = sample_nifti_path("SubjectUCI29_CT_acpc_f.nii");
-	if let Err(error) = load_sample_into_state(&default_ct, &mut state) {
-		state.status_text = format!("默认 CT 加载失败: {error}");
-	}
-	commands.insert_resource(state);
+	commands.insert_resource(MedicalImageState::default());
 
 	if let Ok(content_area) = content_area_query.single() {
 		commands.entity(content_area).with_children(|parent| {
@@ -147,8 +143,7 @@ pub fn on_enter(
 						..default()
 					},))
 						.with_children(|buttons| {
-							spawn_button(buttons, LoadCtSampleButtonMarker, "加载 CT 样例");
-							spawn_button(buttons, LoadMrSampleButtonMarker, "加载 MR 样例");
+							spawn_button(buttons, OpenMedicalImageFileButtonMarker, "打开影像文件");
 							spawn_button(buttons, SliceModeButtonMarker, "切片模式");
 							spawn_button(buttons, SurfaceModeButtonMarker, "表面模式");
 							spawn_button(buttons, VolumeModeButtonMarker, "体渲染模式");
@@ -300,35 +295,29 @@ pub fn on_exit(
 	commands.remove_resource::<MedicalImageSceneResources>();
 }
 
-/// 处理加载 CT 样例
-pub fn handle_load_ct_sample(
-	interaction_query: Query<&Interaction, (Changed<Interaction>, With<LoadCtSampleButtonMarker>)>,
+/// 处理加载医学影像文件
+pub fn handle_open_medical_image_file(
+	interaction_query: Query<
+		&Interaction,
+		(Changed<Interaction>, With<OpenMedicalImageFileButtonMarker>),
+	>,
 	mut state: ResMut<MedicalImageState>,
 ) {
 	for interaction in &interaction_query {
 		if matches!(interaction, Interaction::Pressed) {
-			state.load_state = MedicalImageLoadState::Busy;
-			let path = sample_nifti_path("SubjectUCI29_CT_acpc_f.nii");
-			if let Err(error) = load_sample_into_state(&path, &mut state) {
-				state.load_state = MedicalImageLoadState::Error;
-				state.status_text = format!("加载 CT 样例失败: {error}");
-			}
-		}
-	}
-}
+			let initial_directory = default_medical_image_directory();
+			let Some(path) = pick_single_file(
+				Some(&initial_directory),
+				"选择医学影像文件",
+				&[("NIfTI 文件", &["nii", "gz"])],
+			) else {
+				continue;
+			};
 
-/// 处理加载 MR 样例
-pub fn handle_load_mr_sample(
-	interaction_query: Query<&Interaction, (Changed<Interaction>, With<LoadMrSampleButtonMarker>)>,
-	mut state: ResMut<MedicalImageState>,
-) {
-	for interaction in &interaction_query {
-		if matches!(interaction, Interaction::Pressed) {
 			state.load_state = MedicalImageLoadState::Busy;
-			let path = sample_nifti_path("SubjectUCI29_MR_acpc.nii");
-			if let Err(error) = load_sample_into_state(&path, &mut state) {
+			if let Err(error) = load_volume_into_state(&path, &mut state) {
 				state.load_state = MedicalImageLoadState::Error;
-				state.status_text = format!("加载 MR 样例失败: {error}");
+				state.status_text = format!("加载医学影像失败: {error}");
 			}
 		}
 	}
@@ -1045,18 +1034,18 @@ fn grayscale_to_rgba(grayscale: &[u8]) -> Vec<u8> {
 	rgba
 }
 
-/// 构造样例 NIfTI 路径
-fn sample_nifti_path(file_name: &str) -> PathBuf {
+/// 构造医学影像默认目录
+fn default_medical_image_directory() -> PathBuf {
 	let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 	let base_dir = manifest_dir
 		.parent()
 		.map(std::path::Path::to_path_buf)
 		.unwrap_or(manifest_dir);
-	base_dir.join("data").join(file_name)
+	base_dir.join("data")
 }
 
-/// 将样例文件加载进页面状态
-fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<(), String> {
+/// 将医学影像文件加载进页面状态
+fn load_volume_into_state(path: &Path, state: &mut MedicalImageState) -> Result<(), String> {
 	let volume = load_nifti_file(path).map_err(|error| error.to_string())?;
 	let dims = volume.dims;
 	let modality = volume.modality;

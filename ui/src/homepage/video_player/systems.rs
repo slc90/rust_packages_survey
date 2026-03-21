@@ -1,7 +1,4 @@
-use std::{
-	path::{Path, PathBuf},
-	process::Command,
-};
+use std::path::{Path, PathBuf};
 
 use bevy::{
 	asset::RenderAssetUsages,
@@ -12,6 +9,7 @@ use bevy::{
 };
 use media_player::{PlaybackStatus, PlayerEvent};
 
+use crate::file_dialog::pick_single_file;
 use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::video_player::components::{
 	PopupVideoCloseButtonMarker, PopupVideoDisplayMarker, PopupVideoFileTextMarker,
@@ -532,7 +530,11 @@ fn default_video_directory() -> PathBuf {
 
 /// 打开文件选择框
 fn pick_video_file(initial_directory: &Path) -> Option<PathBuf> {
-	pick_video_file_with_powershell(initial_directory)
+	pick_single_file(
+		Some(initial_directory),
+		"选择视频文件",
+		&[("视频文件", &["mp4", "mov", "mkv", "avi"])],
+	)
 }
 
 /// 把文件加载到播放器槽位
@@ -776,40 +778,5 @@ fn close_popup_entities(
 		}
 	} else {
 		popup_state.window_entity = None;
-	}
-}
-
-/// 使用 PowerShell 原生文件对话框选择 mp4
-fn pick_video_file_with_powershell(initial_directory: &Path) -> Option<PathBuf> {
-	if !cfg!(target_os = "windows") {
-		return None;
-	}
-
-	let initial_directory = initial_directory.to_string_lossy().replace('\'', "''");
-	let script = format!(
-		"[void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); \
-		$dialog = New-Object System.Windows.Forms.OpenFileDialog; \
-		$dialog.Filter = 'MP4 files (*.mp4)|*.mp4'; \
-		$dialog.InitialDirectory = '{initial_directory}'; \
-		$dialog.Multiselect = $false; \
-		if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {{ \
-			Write-Output $dialog.FileName \
-		}}"
-	);
-
-	let output = Command::new("powershell")
-		.args(["-NoProfile", "-Command", &script])
-		.output()
-		.ok()?;
-	if !output.status.success() {
-		return None;
-	}
-
-	let selected_path = String::from_utf8(output.stdout).ok()?;
-	let trimmed = selected_path.trim();
-	if trimmed.is_empty() {
-		None
-	} else {
-		Some(PathBuf::from(trimmed))
 	}
 }
