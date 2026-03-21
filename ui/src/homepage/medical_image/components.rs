@@ -52,6 +52,18 @@ pub struct SliceModeButtonMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct SurfaceModeButtonMarker;
 
+/// 切换到体渲染模式按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct VolumeModeButtonMarker;
+
+/// 体渲染步长减小按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct VolumeStepDecreaseButtonMarker;
+
+/// 体渲染步长增大按钮
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct VolumeStepIncreaseButtonMarker;
+
 /// 窗位减小按钮
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct WindowCenterDecreaseButtonMarker;
@@ -83,6 +95,10 @@ pub struct MedicalImageLightMarker;
 /// 表面网格实体标记
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct MedicalImageSurfaceMeshMarker;
+
+/// 体渲染包围盒实体标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct MedicalImageVolumeBoxMarker;
 
 /// 医学影像按钮 bundle
 #[derive(Bundle)]

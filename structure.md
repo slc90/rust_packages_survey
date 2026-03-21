@@ -1,6 +1,9 @@
 # 目录结构
 ```
 rust_packages_survey/
+├── assets/                                 # 运行时资源目录
+│   └── shaders/
+│       └── medical_volume.wgsl             # 医学影像体渲染 MIP shader
 ├── .cargo/                                 # Cargo构建配置
 │   └── config.toml                         # 链接器配置
 ├── .zed/                                   # Zed编辑器配置
@@ -89,7 +92,8 @@ rust_packages_survey/
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义
 │       │   │   ├── resources.rs           # 医学影像状态、纹理和三维场景资源
-│       │   │   └── systems.rs             # 医学影像加载、切片显示、表面重建和交互系统
+│       │   │   ├── systems.rs             # 医学影像加载、切片显示、表面重建、体渲染和交互系统
+│       │   │   └── volume_render.rs       # 体渲染材质与 3D 纹理构建工具
 │       │   ├── playback_plot/             # 回放波形功能
 │       │   │   ├── components.rs          # 组件定义
 │       │   │   ├── plugin.rs              # 插件定义

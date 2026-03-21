@@ -4,14 +4,18 @@ use crate::homepage::medical_image::components::{
 	LoadMrSampleButtonMarker, MedicalImageButtonBundle, MedicalImageCamera3dMarker,
 	MedicalImageContentMarker, MedicalImageLightMarker, MedicalImagePanelBundle,
 	MedicalImageSourceTextMarker, MedicalImageStatusTextMarker, MedicalImageSurfaceMeshMarker,
-	MedicalImageViewportMarker, RebuildSurfaceButtonMarker, SagittalSliceImageMarker,
-	SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
+	MedicalImageViewportMarker, MedicalImageVolumeBoxMarker, RebuildSurfaceButtonMarker,
+	SagittalSliceImageMarker, SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
 	SurfaceThresholdDecreaseButtonMarker, SurfaceThresholdIncreaseButtonMarker,
+	VolumeModeButtonMarker, VolumeStepDecreaseButtonMarker, VolumeStepIncreaseButtonMarker,
 	WindowCenterDecreaseButtonMarker, WindowCenterIncreaseButtonMarker,
 	WindowWidthDecreaseButtonMarker, WindowWidthIncreaseButtonMarker,
 };
 use crate::homepage::medical_image::resources::{
 	MedicalImageSceneResources, MedicalImageState, MedicalImageTextures, RenderMode,
+};
+use crate::homepage::medical_image::volume_render::{
+	VolumeRenderMaterial, build_render_params, build_volume_texture,
 };
 use bevy::asset::RenderAssetUsages;
 use bevy::camera::{ClearColorConfig, Viewport};
@@ -29,6 +33,7 @@ use std::path::{Path, PathBuf};
 const SLICE_PANEL_SIZE: f32 = 320.0;
 const VIEWPORT_HEIGHT: f32 = 360.0;
 const SURFACE_THRESHOLD_STEP: f32 = 25.0;
+const VOLUME_STEP_FACTOR: f32 = 0.85;
 
 /// 进入医学影像页面
 pub fn on_enter(
@@ -133,9 +138,12 @@ pub fn on_enter(
 							spawn_button(buttons, LoadMrSampleButtonMarker, "加载 MR 样例");
 							spawn_button(buttons, SliceModeButtonMarker, "切片模式");
 							spawn_button(buttons, SurfaceModeButtonMarker, "表面模式");
+							spawn_button(buttons, VolumeModeButtonMarker, "体渲染模式");
 							spawn_button(buttons, RebuildSurfaceButtonMarker, "重建表面");
 							spawn_button(buttons, SurfaceThresholdDecreaseButtonMarker, "阈值 -");
 							spawn_button(buttons, SurfaceThresholdIncreaseButtonMarker, "阈值 +");
+							spawn_button(buttons, VolumeStepDecreaseButtonMarker, "步长 -");
+							spawn_button(buttons, VolumeStepIncreaseButtonMarker, "步长 +");
 							spawn_button(buttons, WindowCenterDecreaseButtonMarker, "窗位 -");
 							spawn_button(buttons, WindowCenterIncreaseButtonMarker, "窗位 +");
 							spawn_button(buttons, WindowWidthDecreaseButtonMarker, "窗宽 -");
@@ -257,6 +265,7 @@ pub fn on_exit(
 			With<MedicalImageCamera3dMarker>,
 			With<MedicalImageLightMarker>,
 			With<MedicalImageSurfaceMeshMarker>,
+			With<MedicalImageVolumeBoxMarker>,
 		)>,
 	>,
 ) {
@@ -363,6 +372,7 @@ pub fn handle_rebuild_surface(
 pub fn handle_render_mode_switch(
 	slice_mode_query: Query<&Interaction, (Changed<Interaction>, With<SliceModeButtonMarker>)>,
 	surface_mode_query: Query<&Interaction, (Changed<Interaction>, With<SurfaceModeButtonMarker>)>,
+	volume_mode_query: Query<&Interaction, (Changed<Interaction>, With<VolumeModeButtonMarker>)>,
 	mut state: ResMut<MedicalImageState>,
 ) {
 	let mut changed = false;
@@ -384,8 +394,49 @@ pub fn handle_render_mode_switch(
 		}
 	}
 
+	for interaction in &volume_mode_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.render_mode = RenderMode::Volume3d;
+			state.volume_dirty = true;
+			changed = true;
+		}
+	}
+
 	if changed {
 		update_status_text(&mut state);
+	}
+}
+
+/// 处理体渲染步长减小
+pub fn handle_volume_step_decrease(
+	interaction_query: Query<
+		&Interaction,
+		(Changed<Interaction>, With<VolumeStepDecreaseButtonMarker>),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.volume_step_size =
+				(state.volume_step_size * VOLUME_STEP_FACTOR).max(1.0 / 1024.0);
+			update_status_text(&mut state);
+		}
+	}
+}
+
+/// 处理体渲染步长增大
+pub fn handle_volume_step_increase(
+	interaction_query: Query<
+		&Interaction,
+		(Changed<Interaction>, With<VolumeStepIncreaseButtonMarker>),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			state.volume_step_size = (state.volume_step_size / VOLUME_STEP_FACTOR).min(1.0 / 32.0);
+			update_status_text(&mut state);
+		}
 	}
 }
 
@@ -585,6 +636,84 @@ pub fn rebuild_surface_mesh(
 	update_status_text(&mut state);
 }
 
+/// 重建体渲染实体和 3D 纹理
+pub fn rebuild_volume_render_entity(
+	mut commands: Commands,
+	mut state: ResMut<MedicalImageState>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut images: ResMut<Assets<Image>>,
+	mut materials: ResMut<Assets<VolumeRenderMaterial>>,
+	volume_query: Query<Entity, With<MedicalImageVolumeBoxMarker>>,
+	mut scene_transforms: ParamSet<(
+		Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
+		Query<
+			&mut Transform,
+			(
+				With<MedicalImageLightMarker>,
+				Without<MedicalImageCamera3dMarker>,
+			),
+		>,
+	)>,
+) {
+	if !state.volume_dirty {
+		return;
+	}
+
+	let Some(volume) = &state.volume else {
+		state.status_text = "未加载体数据，无法创建体渲染".to_string();
+		state.volume_dirty = false;
+		return;
+	};
+
+	for entity in &volume_query {
+		commands.entity(entity).despawn();
+	}
+
+	let volume_texture = images.add(build_volume_texture(volume));
+	let bounds_min = Vec3::from_array(volume.origin);
+	let size = Vec3::new(
+		volume.spacing[0] * volume.dims[0] as f32,
+		volume.spacing[1] * volume.dims[1] as f32,
+		volume.spacing[2] * volume.dims[2] as f32,
+	);
+	let bounds_max = bounds_min + size;
+	let center = (bounds_min + bounds_max) * 0.5;
+	let material_handle = materials.add(VolumeRenderMaterial {
+		render_params: build_render_params(
+			volume,
+			state.window_center,
+			state.window_width,
+			state.volume_step_size,
+		),
+		bounds_min: bounds_min.extend(0.0),
+		bounds_max: bounds_max.extend(0.0),
+		volume_texture,
+	});
+	let mesh_handle = meshes.add(Cuboid::new(
+		size.x.max(1.0),
+		size.y.max(1.0),
+		size.z.max(1.0),
+	));
+
+	commands.spawn((
+		MedicalImageVolumeBoxMarker,
+		Mesh3d(mesh_handle),
+		MeshMaterial3d(material_handle),
+		Transform::from_translation(center),
+	));
+
+	let distance = size.length().max(120.0) * 1.2;
+	state.surface_focus_center = center.to_array();
+	state.surface_camera_distance = distance;
+	state.volume_dirty = false;
+	state.render_mode = RenderMode::Volume3d;
+	apply_orbit_camera_transform(&state, &mut scene_transforms.p0());
+	if let Some(mut light_transform) = scene_transforms.p1().iter_mut().next() {
+		light_transform.translation = center + Vec3::new(distance * 0.7, distance, distance * 0.9);
+	}
+	update_status_text(&mut state);
+}
+
 /// 同步 3D 相机视口和网格显隐
 pub fn sync_3d_viewport(
 	state: Res<MedicalImageState>,
@@ -592,23 +721,34 @@ pub fn sync_3d_viewport(
 	window_query: Query<&Window, With<PrimaryWindow>>,
 	mut camera_query: Query<&mut Camera, With<MedicalImageCamera3dMarker>>,
 	mut mesh_query: Query<&mut Visibility, With<MedicalImageSurfaceMeshMarker>>,
+	mut volume_query: Query<&mut Visibility, With<MedicalImageVolumeBoxMarker>>,
 ) {
 	let Some(mut camera) = camera_query.iter_mut().next() else {
 		return;
 	};
 
-	let surface_mode = state.render_mode == RenderMode::Surface3d;
-	camera.is_active = surface_mode;
+	let show_3d = matches!(
+		state.render_mode,
+		RenderMode::Surface3d | RenderMode::Volume3d
+	);
+	camera.is_active = show_3d;
 
 	for mut visibility in &mut mesh_query {
-		*visibility = if surface_mode {
+		*visibility = if state.render_mode == RenderMode::Surface3d {
+			Visibility::Visible
+		} else {
+			Visibility::Hidden
+		};
+	}
+	for mut visibility in &mut volume_query {
+		*visibility = if state.render_mode == RenderMode::Volume3d {
 			Visibility::Visible
 		} else {
 			Visibility::Hidden
 		};
 	}
 
-	if !surface_mode {
+	if !show_3d {
 		return;
 	}
 
@@ -634,13 +774,43 @@ pub fn sync_3d_viewport(
 	camera.viewport = Some(viewport);
 }
 
+/// 同步体渲染材质参数
+pub fn sync_volume_render_material(
+	state: Res<MedicalImageState>,
+	volume_entity_query: Query<
+		&MeshMaterial3d<VolumeRenderMaterial>,
+		With<MedicalImageVolumeBoxMarker>,
+	>,
+	mut materials: ResMut<Assets<VolumeRenderMaterial>>,
+) {
+	if !state.is_changed() {
+		return;
+	}
+
+	let Some(volume) = &state.volume else {
+		return;
+	};
+	let Some(material_handle) = volume_entity_query.iter().next() else {
+		return;
+	};
+	let Some(material) = materials.get_mut(&material_handle.0) else {
+		return;
+	};
+	material.render_params = build_render_params(
+		volume,
+		state.window_center,
+		state.window_width,
+		state.volume_step_size,
+	);
+}
+
 /// 更新三维相机的简单轨道控制
 pub fn update_surface_preview_transform(
 	keyboard: Res<ButtonInput<KeyCode>>,
 	mut state: ResMut<MedicalImageState>,
 	mut camera_query: Query<&mut Transform, With<MedicalImageCamera3dMarker>>,
 ) {
-	if state.render_mode != RenderMode::Surface3d || state.surface_mesh_stats.is_none() {
+	if matches!(state.render_mode, RenderMode::SliceOnly) || state.volume.is_none() {
 		return;
 	}
 
@@ -767,16 +937,15 @@ fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	state.apply_default_windowing();
 	state.surface_mesh_stats = None;
 	state.surface_dirty = true;
+	state.volume_dirty = true;
 	state.surface_focus_center = [0.0, 0.0, 0.0];
 	state.surface_camera_distance = 400.0;
 	state.surface_camera_yaw = 0.75;
 	state.surface_camera_pitch = 0.45;
-	if state.render_mode == RenderMode::Surface3d {
-		state.surface_dirty = true;
-	}
+	state.volume_step_size = 1.0 / 256.0;
 	update_status_text(state);
 	state.status_text = format!(
-		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1}",
+		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5}",
 		modality,
 		dims[0],
 		dims[1],
@@ -784,7 +953,8 @@ fn load_sample_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 		render_mode_label(state.render_mode),
 		state.window_center,
 		state.window_width,
-		state.surface_threshold
+		state.surface_threshold,
+		state.volume_step_size
 	);
 	Ok(())
 }
@@ -823,11 +993,12 @@ fn update_status_text(state: &mut MedicalImageState) {
 		.unwrap_or_else(|| "未生成表面".to_string());
 
 	state.status_text = format!(
-		"尺寸: {dims_text} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 表面: {mesh_text}",
+		"尺寸: {dims_text} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5} | 表面: {mesh_text}",
 		render_mode_label(state.render_mode),
 		state.window_center,
 		state.window_width,
-		state.surface_threshold
+		state.surface_threshold,
+		state.volume_step_size
 	);
 }
 

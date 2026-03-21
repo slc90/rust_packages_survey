@@ -39,6 +39,10 @@ pub struct MedicalImageState {
 	pub surface_camera_yaw: f32,
 	/// 三维预览相机俯仰角
 	pub surface_camera_pitch: f32,
+	/// 体渲染步长，按包围盒最大边长的比例表示
+	pub volume_step_size: f32,
+	/// 是否请求重建体渲染资源
+	pub volume_dirty: bool,
 	/// 当前显示模式
 	pub render_mode: RenderMode,
 	/// 当前状态文本
@@ -64,6 +68,8 @@ impl Default for MedicalImageState {
 			surface_camera_distance: 400.0,
 			surface_camera_yaw: 0.75,
 			surface_camera_pitch: 0.45,
+			volume_step_size: 1.0 / 256.0,
+			volume_dirty: false,
 			render_mode: RenderMode::SliceOnly,
 			status_text: "尚未加载医学影像数据".to_string(),
 			source_text: "文件: -".to_string(),
