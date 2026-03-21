@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::homepage::realtime_plot::components::{
-	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker,
+	ChannelSliderMarker, ControlPanelMarker, SampleRateDropdownMarker, WaveformMeshMarker,
 };
 use crate::homepage::realtime_plot::resources::{WaveformData, WaveformGenerator};
 use config::data_structure::Setting;
@@ -105,12 +105,14 @@ fn generate_waveform_points(
 
 /// 波形颜色材质资源标签
 #[derive(Resource, Default)]
+#[allow(dead_code)]
 pub struct WaveformMaterials {
 	materials: Vec<Handle<ColorMaterial>>,
 }
 
 /// 波形网格资源标签
 #[derive(Resource, Default)]
+#[allow(dead_code)]
 pub struct WaveformMeshes {
 	handles: Vec<Handle<Mesh>>,
 }
@@ -132,11 +134,22 @@ pub fn init_waveform_rendering(
 		})
 		.collect();
 
-	// 创建初始网格（使用简单的默认点）
+	// 创建初始网格（使用简单的默认点，确保至少2个点）
 	let default_points = vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)];
 	let mesh_handles: Vec<_> = (0..4)
 		.map(|_| meshes.add(Polyline2d::new(default_points.clone())))
 		.collect();
+
+	// 创建渲染波形用的实体
+	for (i, (mesh_handle, mat_handle)) in mesh_handles.iter().zip(mat_handles.iter()).enumerate() {
+		commands.spawn((
+			Mesh2d(mesh_handle.clone()),
+			MeshMaterial2d(mat_handle.clone()),
+			Transform::from_xyz(0.0, 0.0, 0.0),
+			WaveformMeshMarker,
+		));
+		info!("Created waveform entity {}", i);
+	}
 
 	commands.insert_resource(WaveformMaterials {
 		materials: mat_handles,
@@ -150,15 +163,12 @@ pub fn init_waveform_rendering(
 #[allow(clippy::too_many_arguments)]
 pub fn update_waveform_display(
 	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<ColorMaterial>>,
+	_materials: ResMut<Assets<ColorMaterial>>,
 	waveform_data: Option<Res<WaveformData>>,
-	waveform_meshes: Option<ResMut<WaveformMeshes>>,
-	waveform_materials: Option<ResMut<WaveformMaterials>>,
+	mut query: Query<(Entity, &mut Mesh2d), With<WaveformMeshMarker>>,
 ) {
 	// 如果资源不可用，跳过
-	let (Some(waveform_data), Some(mut waveform_meshes), Some(mut waveform_materials)) =
-		(waveform_data, waveform_meshes, waveform_materials)
-	else {
+	let Some(waveform_data) = waveform_data else {
 		return;
 	};
 
@@ -169,40 +179,37 @@ pub fn update_waveform_display(
 	let channels = waveform_data.get_all_channels();
 	let point_count = channels.first().map(|c| c.len()).unwrap_or(0);
 
-	// 确保有足够的网格和材质
-	let current_material_count = waveform_materials.materials.len();
-	for i in current_material_count..channels.len() {
-		// 使用简单的默认点替代空向量
-		let default_points = vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)];
-		waveform_meshes
-			.handles
-			.push(meshes.add(Polyline2d::new(default_points)));
-		let idx = i % CHANNEL_COLORS.len();
-		let c = CHANNEL_COLORS[idx];
-		waveform_materials
-			.materials
-			.push(materials.add(ColorMaterial::from(Color::Srgba(Srgba::new(
-				c[0], c[1], c[2], c[3],
-			)))));
-	}
+	// 获取所有波形实体并更新其网格
+	let mut query_iter = query.iter_mut();
 
-	// 更新每个通道的网格
 	for (i, channel_data) in channels.iter().enumerate() {
-		if i >= waveform_meshes.handles.len() {
-			break;
-		}
+		// 获取或跳过实体
+		let (_entity, mut mesh2d) = match query_iter.next() {
+			Some((entity, mesh2d)) => (entity, mesh2d),
+			None => continue,
+		};
 
+		// 生成波形点
 		let points = generate_waveform_points(channel_data, i, point_count.max(1));
-		let new_mesh = meshes.add(Polyline2d::new(points));
+		let new_mesh_handle = meshes.add(Polyline2d::new(points));
 
-		// 替换旧网格
-		waveform_meshes.handles[i] = new_mesh;
+		// 更新实体的网格
+		*mesh2d = Mesh2d(new_mesh_handle);
 	}
 }
 
 /// 清理波形渲染资源
-pub fn cleanup_waveform_rendering(mut commands: Commands) {
+pub fn cleanup_waveform_rendering(
+	mut commands: Commands,
+	query: Query<Entity, With<WaveformMeshMarker>>,
+) {
 	info!("清理波形渲染资源");
+
+	// 删除所有波形实体
+	for entity in &query {
+		commands.entity(entity).despawn();
+	}
+
 	commands.remove_resource::<WaveformMeshes>();
 	commands.remove_resource::<WaveformMaterials>();
 }
@@ -219,30 +226,88 @@ const AXIS_COLOR: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
 const GRID_COLOR: [f32; 4] = [0.3, 0.3, 0.3, 1.0];
 
 /// 初始化坐标轴和网格
-/// TODO: 暂时禁用，需要修复 overflow 问题
 pub fn spawn_axis_grid(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
 	settings: Option<Res<WaveformSettings>>,
 ) {
-	info!("Spawning axis and grid - DISABLED FOR DEBUG");
+	info!("Spawning axis and grid");
 
 	// 获取设置值（使用默认值兜底）
 	let channel_count = settings.map(|s| s.channel_count).unwrap_or(1);
-	info!("Channel count: {}", channel_count);
+	let channel_height = CHANNEL_HEIGHT;
+	let total_height = channel_height * channel_count as f32;
+	let width = WAVEFORM_WIDTH;
 
-	// 创建一个非常简单的测试 - 使用 Circle
-	let circle_mesh = meshes.add(Circle { radius: 50.0 }.mesh());
-	let test_mat = materials.add(ColorMaterial::from(Color::srgb(0.5, 0.5, 0.5)));
+	// 创建坐标轴材质
+	let axis_mat = materials.add(ColorMaterial::from(Color::srgb(0.5, 0.5, 0.5)));
+	let grid_mat = materials.add(ColorMaterial::from(Color::srgb(0.3, 0.3, 0.3)));
+
+	// X轴（水平中心线）- 为每个通道创建一条中心线
+	for ch in 0..channel_count {
+		let y_offset = (total_height / 2.0) - (ch as f32 * channel_height);
+		// 确保至少有2个点来绘制线条
+		let x_axis_points = if width > 0.0 {
+			vec![
+				Vec2::new(-width / 2.0, y_offset),
+				Vec2::new(width / 2.0, y_offset),
+			]
+		} else {
+			vec![Vec2::new(-100.0, y_offset), Vec2::new(100.0, y_offset)]
+		};
+		let x_axis_mesh = meshes.add(Polyline2d::new(x_axis_points));
+
+		commands.spawn((
+			Mesh2d(x_axis_mesh),
+			MeshMaterial2d(axis_mat.clone()),
+			Transform::from_xyz(0.0, 0.0, -0.1),
+		));
+	}
+
+	// Y轴（垂直中心线）
+	let y_axis_points = vec![Vec2::new(-width / 2.0, 0.0), Vec2::new(width / 2.0, 0.0)];
+	let y_axis_mesh = meshes.add(Polyline2d::new(y_axis_points));
 
 	commands.spawn((
-		Mesh2d(circle_mesh),
-		MeshMaterial2d(test_mat),
+		Mesh2d(y_axis_mesh),
+		MeshMaterial2d(axis_mat.clone()),
 		Transform::from_xyz(0.0, 0.0, -0.1),
 	));
 
-	info!("Test mesh (quad) spawned successfully");
+	// 垂直网格线
+	let grid_spacing = width / 10.0;
+	if grid_spacing > 0.0 {
+		for i in 0..=10 {
+			let x = -width / 2.0 + i as f32 * grid_spacing;
+			let grid_points = vec![
+				Vec2::new(x, -total_height / 2.0),
+				Vec2::new(x, total_height / 2.0),
+			];
+			let grid_mesh = meshes.add(Polyline2d::new(grid_points));
+
+			commands.spawn((
+				Mesh2d(grid_mesh),
+				MeshMaterial2d(grid_mat.clone()),
+				Transform::from_xyz(0.0, 0.0, -0.2),
+			));
+		}
+	}
+
+	// 水平网格线
+	for ch in 0..=channel_count {
+		let y = (total_height / 2.0) - (ch as f32 * channel_height);
+		let grid_points = vec![Vec2::new(-width / 2.0, y), Vec2::new(width / 2.0, y)];
+		let grid_mesh = meshes.add(Polyline2d::new(grid_points));
+
+		commands.spawn((
+			Mesh2d(grid_mesh),
+			MeshMaterial2d(grid_mat.clone()),
+			Transform::from_xyz(0.0, 0.0, -0.2),
+		));
+	}
+
+	info!("Axis and grid spawned successfully");
 }
 
 // ============================================================================
