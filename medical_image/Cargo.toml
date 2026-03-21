@@ -1,0 +1,15 @@
+[package]
+name = "medical_image"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Medical imaging data structures and processing utilities"
+
+[dependencies]
+nifti = "0.17"
+dicom-object = "0.9"
+dicom-pixeldata = "0.9"
+ndarray = "0.16"
+image = "0.25"
+fast-surface-nets = "0.2"

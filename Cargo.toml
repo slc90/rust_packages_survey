@@ -4,6 +4,7 @@ members = [
     "logger",
     "utils",
     "ui",
+    "medical_image",
     "embedded_assets",
     "i18n",
     "config",

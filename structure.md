@@ -12,6 +12,7 @@ rust_packages_survey/
 ├── docs/                                   # 项目文档
 │   ├── helpers.md                          # 辅助文档记录
 │   ├── homepage_content_area_switch.md     # 主页内容区域切换功能实现方案
+│   ├── medical_imaging设计方案.md          # 医学影像功能设计方案
 │   ├── playback_waveform设计方案.md        # 回放波形功能设计方案
 │   ├── realtime_plot.md                    # 实时波形画图方案
 │   ├── requirements.md                     # 功能需求列表
@@ -56,6 +57,13 @@ rust_packages_survey/
 │   ├── Cargo.toml
 │   └── src/
 │       └── lib.rs                          # 日志库代码
+├── medical_image/                          # 医学影像基础库crate
+│   ├── Cargo.toml
+│   └── src/                                # 源代码
+│       ├── lib.rs                          # 库入口点
+│       ├── slice.rs                        # 三视图切片工具
+│       ├── volume.rs                       # 统一体数据结构与错误类型
+│       └── windowing.rs                    # 窗宽窗位与灰度映射工具
 ├── config/                                 # 配置管理库crate
 │   ├── Cargo.toml
 │   ├── config_file/                        # 配置文件目录
