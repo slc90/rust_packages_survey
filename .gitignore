@@ -8,3 +8,6 @@ report_output/
 screenshots/
 deepl_models/
 deep_learning_output/
+/installer/staging/
+/installer/dist/
+/installer/local_paths.ps1

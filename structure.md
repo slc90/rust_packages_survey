@@ -55,6 +55,19 @@ rust_packages_survey/
 │       ├── lib.rs                          # 库入口点
 │       ├── locale_en.rs                    # 英文本地化
 │       └── locale_zh.rs                    # 中文本地化
+├── installer/                              # Windows 安装包工程目录
+│   ├── manifests/                          # 安装资源整理清单
+│   │   ├── cuda_runtime_dlls.txt           # CUDA 运行时 DLL 匹配清单
+│   │   ├── gstreamer_runtime_roots.txt     # GStreamer 运行时目录清单
+│   │   └── whisper_base_required_files.txt # Whisper Base 必需模型文件清单
+│   ├── scripts/                            # 安装包构建脚本
+│   │   ├── build_installer.ps1             # 安装包 staging 和 MSI 构建脚本
+│   │   ├── prepare_cuda_runtime.ps1        # CUDA 运行时整理脚本
+│   │   ├── prepare_models.ps1              # Whisper Base 模型整理脚本
+│   │   └── prepare_runtime.ps1             # GStreamer 运行时整理脚本
+│   └── wix/                                # WiX 模板和资源
+│       ├── License.rtf                     # 安装器许可文本占位文件
+│       └── main.wxs                        # MSI 主模板
 ├── logger/                                 # 日志库crate
 │   ├── Cargo.toml
 │   └── src/
@@ -139,14 +152,8 @@ rust_packages_survey/
 ├── crates_survey.md                        # Rust包调研记录
 ├── rustfmt.toml                            # Rust代码格式化配置
 └── structure.md                            # 项目目录结构文档
-> 2026-03-21 å¢žé‡æ›´æ–°
->
-> - æ–°å¢ž `media_player/` crateï¼Œç”¨äºŽåŸºäºŽ `gstreamer-rs` çš„è§†é¢‘æ’­æ”¾å†…æ ¸
-> - æ–°å¢ž `ui/src/homepage/video_player/` æ¨¡å—ï¼Œç”¨äºŽä¸»çª—å£è§†é¢‘æ’­æ”¾é¡µé¢
-> - ä¸»é¡µ `Functions` çŠ¶æ€æ–°å¢ž `VideoPlayer`
-> - èœå•æ æ–°å¢žâ€œæ’­æ”¾è§†é¢‘â€å…¥å£
-> - `i18n` æ–°å¢ž `VideoPlayer` å›½é™…åŒ– key
->
+```
+
 > 2026-03-21 Incremental Update
 >
 > - add `media_player/` crate for GStreamer-based video playback
@@ -246,3 +253,45 @@ rust_packages_survey/
 >
 > - move the paradigm default GIF into `embedded_assets/assets/paradigm/default.gif`
 > - keep `medical_volume.wgsl` only under `embedded_assets/assets/shaders/` and remove the duplicate root-level asset copy
+>
+> 2026-03-22 Installer Plan Update
+>
+> - add `docs/安装包设计方案.md` for the Windows installer plan
+> - `docs/requirements.md` installer section now includes the design document entry
+>
+> 2026-03-22 Installer MSI Strategy Update
+>
+> - `docs/安装包设计方案.md` now fixes the installer path to `cargo wix + WiX Toolset` with offline `MSI`
+> - the installer plan now requires bundling a fixed `GStreamer Runtime` into the package instead of asking users to download it separately
+>
+> 2026-03-22 Installer Resource Scope Update
+>
+> - `docs/安装包设计方案.md` now treats `deepl_models/whisper_base/` as a required packaged model resource
+> - installer Phase 4 no longer includes CI work and is limited to local build/release engineering steps
+>
+> 2026-03-22 Installer CUDA Runtime Update
+>
+> - `docs/安装包设计方案.md` now requires bundling the program's redistributable `CUDA` runtime DLLs into the installer
+> - the installer plan now distinguishes packaged `CUDA` runtime files from machine-level `NVIDIA` driver prerequisites
+>
+> 2026-03-22 Installer Scaffold Update
+>
+> - add `installer/` with WiX template, PowerShell build scripts and runtime/model manifests for MSI packaging
+> - `deep_learning/src/model.rs` now falls back to the executable directory in installed deployments so packaged model and output paths remain stable
+>
+> 2026-03-22 Installer WiX v5 Update
+>
+> - installer build flow now targets `WiX Toolset v5` and no longer depends on `heat.exe` or `cargo-wix`
+> - `installer/wix/main.wxs` now uses WiX v5 authoring with `Files` bound from the staged application directory
+>
+> 2026-03-22 Installer Local Path Update
+>
+> - `installer/scripts/build_installer.ps1` now reads `GStreamerRoot` from `installer/local_paths.ps1` before falling back to command arguments or environment variables
+> - `installer/local_paths.ps1` is treated as a local ignored file for machine-specific installer paths
+> - `CudaBinRoot` now also reads from `installer/local_paths.ps1`, allowing both runtime paths to be kept in one local machine config
+>
+> 2026-03-22 Installer Runtime Fix Update
+>
+> - installer GStreamer staging now filters out `.pdb` and other non-runtime files, and also stages `libexec/gstreamer-1.0/` tools such as `gst-plugin-scanner.exe`
+> - installed deployments now route logs and deep learning outputs to `LOCALAPPDATA/rust_packages_survey/`, while startup also prepends packaged `gstreamer` and `cuda` runtime directories to the process environment
+> - screenshot output paths now follow the same rule, falling back to `LOCALAPPDATA/rust_packages_survey/screenshots/` in installed deployments

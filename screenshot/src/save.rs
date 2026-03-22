@@ -8,16 +8,58 @@ use bevy::prelude::Image;
 
 use crate::{error::ScreenshotError, request::CaptureOutputKind, result::ScreenshotResult};
 
-fn workspace_root() -> Result<PathBuf, ScreenshotError> {
-	let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-	manifest_dir
-		.parent()
-		.map(Path::to_path_buf)
-		.ok_or(ScreenshotError::InvalidOutputDirectory(manifest_dir))
+/// 解析截图输出根目录。
+///
+/// 开发环境优先回到工作区根目录；
+/// 安装版环境统一落到 `LOCALAPPDATA/rust_packages_survey/screenshots/`，
+/// 避免继续写到开发目录或 `Program Files`。
+fn screenshot_root_dir() -> Result<PathBuf, ScreenshotError> {
+	if let Ok(current_dir) = std::env::current_dir()
+		&& let Some(root) = find_workspace_root_from(&current_dir)
+	{
+		return Ok(root);
+	}
+
+	if let Ok(current_exe) = std::env::current_exe()
+		&& let Some(exe_dir) = current_exe.parent()
+	{
+		if let Some(root) = find_workspace_root_from(exe_dir) {
+			return Ok(root);
+		}
+
+		if let Some(local_app_data_dir) = local_app_data_root_dir() {
+			return Ok(local_app_data_dir);
+		}
+
+		return Ok(exe_dir.to_path_buf());
+	}
+
+	let fallback_dir = PathBuf::from(".");
+	Err(ScreenshotError::InvalidOutputDirectory(fallback_dir))
+}
+
+/// 获取当前用户的本地应用数据目录。
+fn local_app_data_root_dir() -> Option<PathBuf> {
+	let local_app_data = std::env::var_os("LOCALAPPDATA")?;
+	Some(PathBuf::from(local_app_data).join("rust_packages_survey"))
+}
+
+/// 从指定目录向上查找工作区根目录。
+fn find_workspace_root_from(start: &Path) -> Option<PathBuf> {
+	for directory in start.ancestors() {
+		let cargo_toml = directory.join("Cargo.toml");
+		let entry_manifest = directory.join("entry").join("Cargo.toml");
+		let screenshot_manifest = directory.join("screenshot").join("Cargo.toml");
+		if cargo_toml.exists() && entry_manifest.exists() && screenshot_manifest.exists() {
+			return Some(directory.to_path_buf());
+		}
+	}
+
+	None
 }
 
 pub fn screenshots_dir() -> Result<PathBuf, ScreenshotError> {
-	let path = workspace_root()?.join("screenshots");
+	let path = screenshot_root_dir()?.join("screenshots");
 	if !path.exists() {
 		fs::create_dir_all(&path)?;
 	}

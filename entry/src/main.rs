@@ -21,7 +21,7 @@ use embedded_assets::{
 };
 use i18n::{I18nPlugin, LanguageManager, data_structure::LanguageKey};
 use logger::{custom_layer, fmt_layer};
-use std::env;
+use std::{env, ffi::OsString};
 use ui::{
 	homepage::{common::ContentAreaMarker, plugin::HomepagePlugin},
 	menu_bar::{plugin::MenuBarPlugin, systems::build_menu_bar},
@@ -35,6 +35,7 @@ use ui::{
 };
 
 fn main() {
+	configure_packaged_runtime_environment();
 	let mut app = App::new();
 	//修改默认Plugin
 	app.add_plugins(
@@ -84,6 +85,58 @@ fn main() {
 	app.add_systems(Startup, setup);
 	app.add_systems(Update, sync_root_layout);
 	app.run();
+}
+
+fn configure_packaged_runtime_environment() {
+	let Ok(current_exe) = env::current_exe() else {
+		return;
+	};
+	let Some(exe_dir) = current_exe.parent() else {
+		return;
+	};
+
+	let gst_bin_dir = exe_dir.join("gstreamer").join("bin");
+	let gst_plugin_dir = exe_dir.join("gstreamer").join("lib").join("gstreamer-1.0");
+	let gst_libexec_dir = exe_dir
+		.join("gstreamer")
+		.join("libexec")
+		.join("gstreamer-1.0");
+	let cuda_bin_dir = exe_dir.join("cuda").join("bin");
+	let mut path_entries = Vec::new();
+
+	if gst_bin_dir.exists() {
+		path_entries.push(gst_bin_dir.clone());
+	}
+	if cuda_bin_dir.exists() {
+		path_entries.push(cuda_bin_dir);
+	}
+
+	if !path_entries.is_empty() {
+		let mut combined_path_entries = path_entries;
+		if let Some(existing_path) = env::var_os("PATH") {
+			combined_path_entries.extend(env::split_paths(&existing_path));
+		}
+		if let Ok(joined_runtime_path) = env::join_paths(&combined_path_entries) {
+			unsafe {
+				env::set_var("PATH", joined_runtime_path);
+			}
+		}
+	}
+
+	if gst_plugin_dir.exists() {
+		unsafe {
+			env::set_var("GST_PLUGIN_PATH_1_0", &gst_plugin_dir);
+			env::set_var("GST_PLUGIN_SYSTEM_PATH_1_0", &gst_plugin_dir);
+		}
+	}
+
+	let gst_plugin_scanner = gst_libexec_dir.join("gst-plugin-scanner.exe");
+	if gst_plugin_scanner.exists() {
+		unsafe {
+			env::set_var("GST_PLUGIN_SCANNER", OsString::from(&gst_plugin_scanner));
+			env::set_var("GST_PLUGIN_SCANNER_1_0", gst_plugin_scanner);
+		}
+	}
 }
 
 fn preferred_backends() -> Option<Backends> {

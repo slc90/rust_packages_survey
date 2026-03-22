@@ -1,0 +1,6 @@
+cudart64_*.dll
+cublas64_*.dll
+cublasLt64_*.dll
+cufft64_*.dll
+curand64_*.dll
+nvrtc64_*.dll

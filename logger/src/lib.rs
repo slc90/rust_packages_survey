@@ -73,8 +73,8 @@ pub fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
 /// 解析日志目录。
 ///
 /// 优先从当前工作目录链路向上定位工作区根目录，兼容在编辑器里以 `entry/`
-/// 作为工作目录直接运行 `entry/src/main.rs` 的场景；如果失败，再回退到可执行文件
-/// 所在目录链路向上查找，最终统一落到工作区根目录下的 `logs/`。
+/// 作为工作目录直接运行 `entry/src/main.rs` 的场景；如果失败，安装版统一回退到
+/// `LOCALAPPDATA/rust_packages_survey/logs/`，避免把日志写到 `Program Files`。
 fn resolve_logs_dir() -> PathBuf {
 	if let Ok(current_dir) = std::env::current_dir()
 		&& let Some(root) = find_workspace_root_from(&current_dir)
@@ -89,7 +89,23 @@ fn resolve_logs_dir() -> PathBuf {
 		return root.join("logs");
 	}
 
+	if let Some(local_app_data_dir) = local_app_data_root_dir() {
+		return local_app_data_dir.join("logs");
+	}
+
+	if let Ok(current_exe) = std::env::current_exe()
+		&& let Some(exe_dir) = current_exe.parent()
+	{
+		return exe_dir.join("logs");
+	}
+
 	PathBuf::from("logs")
+}
+
+/// 获取当前用户的本地应用数据目录。
+fn local_app_data_root_dir() -> Option<PathBuf> {
+	let local_app_data = std::env::var_os("LOCALAPPDATA")?;
+	Some(PathBuf::from(local_app_data).join("rust_packages_survey"))
 }
 
 /// 从指定目录向上查找工作区根目录。

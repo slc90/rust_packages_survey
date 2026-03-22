@@ -1,0 +1,3 @@
+bin
+lib\gstreamer-1.0
+libexec\gstreamer-1.0

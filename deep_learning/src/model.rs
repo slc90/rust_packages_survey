@@ -39,7 +39,7 @@ pub struct ModelDescriptor {
 
 /// 获取项目根目录下的模型根目录。
 pub fn model_root_dir() -> PathBuf {
-	workspace_root_dir().join("deepl_models")
+	app_root_dir().join("deepl_models")
 }
 
 /// 获取模型能力对应的目录名。
@@ -67,6 +67,10 @@ pub fn model_weights_path(descriptor: &ModelDescriptor) -> PathBuf {
 
 /// 创建所有模型能力目录。
 pub fn ensure_model_directories() -> Result<(), DeepLearningError> {
+	if resolve_workspace_root_dir().is_none() {
+		return Ok(());
+	}
+
 	let root = model_root_dir();
 	std::fs::create_dir_all(root.join("translation"))?;
 	std::fs::create_dir_all(root.join("separation"))?;
@@ -98,25 +102,63 @@ pub fn ensure_model_weights_exist(path: &Path) -> Result<(), DeepLearningError> 
 	})
 }
 
-/// 定位当前工作区根目录。
+/// 定位当前应用根目录。
 ///
 /// 优先从当前工作目录向上寻找，兼容通过编辑器直接运行 `entry` 的场景；
-/// 如果当前目录链路找不到，再回退到可执行文件所在目录向上寻找。
+/// 如果当前目录链路找不到，再回退到可执行文件所在目录；
+/// 这样安装版程序也能稳定使用 `exe` 同级目录作为根目录。
+pub fn app_root_dir() -> PathBuf {
+	if let Some(root) = resolve_workspace_root_dir() {
+		return root;
+	}
+
+	if let Ok(current_exe) = std::env::current_exe()
+		&& let Some(exe_dir) = current_exe.parent()
+	{
+		if let Some(root) = find_workspace_root_from(exe_dir) {
+			return root;
+		}
+
+		return exe_dir.to_path_buf();
+	}
+
+	PathBuf::from(".")
+}
+
+/// 兼容旧调用方的工作区根目录入口。
+///
+/// 开发环境下返回工作区根目录，安装版环境下回退到 `exe` 同级目录。
 pub fn workspace_root_dir() -> PathBuf {
+	app_root_dir()
+}
+
+/// 获取开发环境下的工作区根目录。
+pub fn workspace_root_dir_if_available() -> Option<PathBuf> {
+	resolve_workspace_root_dir()
+}
+
+/// 获取安装版用户可写数据根目录。
+pub fn local_app_data_root_dir() -> Option<PathBuf> {
+	let local_app_data = std::env::var_os("LOCALAPPDATA")?;
+	Some(PathBuf::from(local_app_data).join("rust_packages_survey"))
+}
+
+/// 解析当前是否处于工作区运行环境。
+fn resolve_workspace_root_dir() -> Option<PathBuf> {
 	if let Ok(current_dir) = std::env::current_dir()
 		&& let Some(root) = find_workspace_root_from(&current_dir)
 	{
-		return root;
+		return Some(root);
 	}
 
 	if let Ok(current_exe) = std::env::current_exe()
 		&& let Some(exe_dir) = current_exe.parent()
 		&& let Some(root) = find_workspace_root_from(exe_dir)
 	{
-		return root;
+		return Some(root);
 	}
 
-	PathBuf::from(".")
+	None
 }
 
 /// 从指定目录向上查找工作区根目录。
