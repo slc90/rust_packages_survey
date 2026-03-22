@@ -1,12 +1,12 @@
 use crate::homepage::common::Functions;
 use crate::homepage::medical_image::systems::{
-	handle_open_medical_image_file, handle_rebuild_surface, handle_render_mode_switch,
-	handle_surface_threshold_decrease, handle_surface_threshold_increase,
-	handle_volume_step_decrease, handle_volume_step_increase, handle_window_center_decrease,
-	handle_window_center_increase, handle_window_width_decrease, handle_window_width_increase,
-	on_enter, on_exit, rebuild_surface_mesh, rebuild_volume_render_entity, sync_3d_viewport,
-	sync_medical_image_texts, sync_volume_render_material, update_slice_images,
-	update_surface_preview_transform,
+	handle_open_dicom_directory, handle_open_medical_image_file, handle_rebuild_surface,
+	handle_render_mode_switch, handle_surface_threshold_decrease,
+	handle_surface_threshold_increase, handle_volume_step_decrease, handle_volume_step_increase,
+	handle_window_center_decrease, handle_window_center_increase, handle_window_width_decrease,
+	handle_window_width_increase, on_enter, on_exit, rebuild_surface_mesh,
+	rebuild_volume_render_entity, sync_3d_viewport, sync_medical_image_texts,
+	sync_volume_render_material, update_slice_images, update_surface_preview_transform,
 };
 use crate::homepage::medical_image::volume_render::VolumeRenderMaterialPlugin;
 use bevy::prelude::*;
@@ -23,6 +23,7 @@ impl Plugin for MedicalImagePlugin {
 				Update,
 				(
 					handle_open_medical_image_file,
+					handle_open_dicom_directory,
 					handle_surface_threshold_decrease,
 					handle_surface_threshold_increase,
 					handle_rebuild_surface,

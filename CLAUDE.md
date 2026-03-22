@@ -71,7 +71,7 @@ cargo build --workspace
 - 配置路径使用 `env::current_exe()` 获取 exe 所在目录
 
 ## 其他规范
-1. 修改代码后记得更新 `structure.md`
+1. `structure.md`只是用来记录项目结构的，修改代码后记得更新 `structure.md`，但不要添加其他和结构无关的内容
 2. 代码增加注释，使用中文
 3. 根据方案完成后记得修改 `docs/requirements.md` 中对应部分
 4. 提交前不能跳过hook

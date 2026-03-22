@@ -65,6 +65,8 @@ pub enum VolumeModality {
 	Ct,
 	/// MR 体数据
 	Mr,
+	/// 其他通用体数据
+	Other,
 	/// 分割结果体数据
 	Segmentation,
 }
@@ -83,6 +85,7 @@ impl FromStr for VolumeModality {
 		match modality.trim().to_ascii_uppercase().as_str() {
 			"CT" => Ok(Self::Ct),
 			"MR" => Ok(Self::Mr),
+			"OT" => Ok(Self::Other),
 			"SEG" | "SEGMENTATION" => Ok(Self::Segmentation),
 			other => Err(MedicalImageError::UnsupportedModality(other.to_string())),
 		}

@@ -121,6 +121,14 @@ impl MedicalImageState {
 					self.surface_threshold = self.window_center;
 				}
 			}
+			Some(VolumeModality::Other) => {
+				if let Some(volume) = &self.volume {
+					let [min_value, max_value] = volume.value_range;
+					self.window_center = (min_value + max_value) / 2.0;
+					self.window_width = (max_value - min_value).max(1.0);
+					self.surface_threshold = self.window_center;
+				}
+			}
 			Some(VolumeModality::Segmentation) => {
 				self.window_center = 0.5;
 				self.window_width = 1.0;

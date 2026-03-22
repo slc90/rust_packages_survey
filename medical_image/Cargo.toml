@@ -13,3 +13,4 @@ dicom-pixeldata = { version = "0.9", features = ["ndarray"] }
 ndarray = "0.16"
 image = "0.25"
 fast-surface-nets = "0.2"
+tracing = "0.1"

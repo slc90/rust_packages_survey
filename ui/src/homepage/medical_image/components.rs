@@ -28,6 +28,10 @@ pub struct SagittalSliceImageMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct OpenMedicalImageFileButtonMarker;
 
+/// 打开 DICOM 目录按钮标记
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct OpenDicomDirectoryButtonMarker;
+
 /// 阈值减小按钮
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct SurfaceThresholdDecreaseButtonMarker;

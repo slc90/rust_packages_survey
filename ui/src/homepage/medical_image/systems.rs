@@ -1,12 +1,12 @@
-use crate::file_dialog::pick_single_file;
+use crate::file_dialog::{pick_single_directory, pick_single_file};
 use crate::homepage::common::ContentAreaMarker;
 use crate::homepage::medical_image::components::{
 	AxialSliceImageMarker, CoronalSliceImageMarker, MedicalImageButtonBundle,
 	MedicalImageCamera3dMarker, MedicalImageContentMarker, MedicalImageLightMarker,
 	MedicalImagePanelBundle, MedicalImageSourceTextMarker, MedicalImageStatusTextMarker,
 	MedicalImageSurfaceMeshMarker, MedicalImageViewportMarker, MedicalImageVolumeBoxMarker,
-	OpenMedicalImageFileButtonMarker, RebuildSurfaceButtonMarker, SagittalSliceImageMarker,
-	SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
+	OpenDicomDirectoryButtonMarker, OpenMedicalImageFileButtonMarker, RebuildSurfaceButtonMarker,
+	SagittalSliceImageMarker, SliceImageBundle, SliceModeButtonMarker, SurfaceModeButtonMarker,
 	SurfaceThresholdDecreaseButtonMarker, SurfaceThresholdIncreaseButtonMarker,
 	VolumeModeButtonMarker, VolumeStepDecreaseButtonMarker, VolumeStepIncreaseButtonMarker,
 	WindowCenterDecreaseButtonMarker, WindowCenterIncreaseButtonMarker,
@@ -28,7 +28,7 @@ use bevy::ui::UiGlobalTransform;
 use bevy::window::PrimaryWindow;
 use medical_image::{
 	SliceAxis, SurfaceExtractOptions, SurfaceMeshData, extract_isosurface, extract_slice,
-	load_nifti_file, normalize_slice_to_u8,
+	load_dicom_series, load_nifti_file, normalize_slice_to_u8,
 };
 use std::path::{Path, PathBuf};
 
@@ -144,6 +144,7 @@ pub fn on_enter(
 					},))
 						.with_children(|buttons| {
 							spawn_button(buttons, OpenMedicalImageFileButtonMarker, "打开影像文件");
+							spawn_button(buttons, OpenDicomDirectoryButtonMarker, "加载DICOM目录");
 							spawn_button(buttons, SliceModeButtonMarker, "切片模式");
 							spawn_button(buttons, SurfaceModeButtonMarker, "表面模式");
 							spawn_button(buttons, VolumeModeButtonMarker, "体渲染模式");
@@ -318,6 +319,31 @@ pub fn handle_open_medical_image_file(
 			if let Err(error) = load_volume_into_state(&path, &mut state) {
 				state.load_state = MedicalImageLoadState::Error;
 				state.status_text = format!("加载医学影像失败: {error}");
+			}
+		}
+	}
+}
+
+/// 处理加载 DICOM 目录
+pub fn handle_open_dicom_directory(
+	interaction_query: Query<
+		&Interaction,
+		(Changed<Interaction>, With<OpenDicomDirectoryButtonMarker>),
+	>,
+	mut state: ResMut<MedicalImageState>,
+) {
+	for interaction in &interaction_query {
+		if matches!(interaction, Interaction::Pressed) {
+			let initial_directory = default_medical_image_directory();
+			let Some(path) = pick_single_directory(Some(&initial_directory), "选择 DICOM 序列目录")
+			else {
+				continue;
+			};
+
+			state.load_state = MedicalImageLoadState::Busy;
+			if let Err(error) = load_dicom_into_state(&path, &mut state) {
+				state.load_state = MedicalImageLoadState::Error;
+				state.status_text = format!("加载 DICOM 失败: {error}");
 			}
 		}
 	}
@@ -1054,6 +1080,7 @@ fn load_volume_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	state.modality = Some(modality);
 	state.load_state = MedicalImageLoadState::Ready;
 	state.source_text = format!("文件: {}", path.display());
+	state.current_series_uid = None;
 	state.reset_slice_index();
 	state.apply_default_windowing();
 	state.surface_mesh_stats = None;
@@ -1068,6 +1095,44 @@ fn load_volume_into_state(path: &Path, state: &mut MedicalImageState) -> Result<
 	update_status_text(state);
 	state.status_text = format!(
 		"已加载 {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5}",
+		modality,
+		dims[0],
+		dims[1],
+		dims[2],
+		render_mode_label(state.render_mode),
+		state.window_center,
+		state.window_width,
+		state.surface_threshold,
+		state.volume_step_size
+	);
+	Ok(())
+}
+
+/// 将 DICOM 序列目录加载进页面状态
+fn load_dicom_into_state(path: &Path, state: &mut MedicalImageState) -> Result<(), String> {
+	let volume = load_dicom_series(path).map_err(|error| error.to_string())?;
+	let dims = volume.dims;
+	let modality = volume.modality;
+	state.volume_revision = state.volume_revision.saturating_add(1);
+	state.volume = Some(volume);
+	state.modality = Some(modality);
+	state.load_state = MedicalImageLoadState::Ready;
+	state.source_text = format!("DICOM目录: {}", path.display());
+	state.current_series_uid = None;
+	state.reset_slice_index();
+	state.apply_default_windowing();
+	state.surface_mesh_stats = None;
+	state.surface_dirty = false;
+	state.volume_dirty = false;
+	state.surface_focus_center = [0.0, 0.0, 0.0];
+	state.surface_camera_distance = 400.0;
+	state.surface_camera_yaw = 0.75;
+	state.surface_camera_pitch = 0.45;
+	state.volume_step_size = 1.0 / 256.0;
+	state.render_mode = RenderMode::SliceOnly;
+	update_status_text(state);
+	state.status_text = format!(
+		"已加载 DICOM {:?} | 尺寸: {} x {} x {} | 模式: {} | 窗位/窗宽: {:.1}/{:.1} | 阈值: {:.1} | 步长: {:.5}",
 		modality,
 		dims[0],
 		dims[1],

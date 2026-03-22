@@ -5690,6 +5690,7 @@ dependencies = [
  "image 0.25.9",
  "ndarray",
  "nifti",
+ "tracing",
 ]
 
 [[package]]

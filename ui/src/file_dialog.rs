@@ -18,3 +18,14 @@ pub fn pick_single_file(
 
 	dialog.pick_file()
 }
+
+/// 使用 rfd 打开目录选择框
+pub fn pick_single_directory(initial_directory: Option<&Path>, title: &str) -> Option<PathBuf> {
+	let mut dialog = rfd::FileDialog::new().set_title(title);
+
+	if let Some(directory) = initial_directory.filter(|path| path.exists()) {
+		dialog = dialog.set_directory(directory);
+	}
+
+	dialog.pick_folder()
+}
