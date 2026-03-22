@@ -6,6 +6,10 @@ authors.workspace = true
 license.workspace = true
 description = "deep_learning_inference"
 
+[features]
+default = []
+cuda = ["candle-core/cuda", "candle-nn/cuda"]
+
 [dependencies]
 bevy.workspace = true
 serde.workspace = true
@@ -16,5 +20,5 @@ num-traits = "0.2"
 tracing = "0.1"
 image = "0.25"
 thiserror = "2.0.17"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.2", features = ["cuda"] }
-candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.2", features = ["cuda"] }
+candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.2" }
+candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.2" }

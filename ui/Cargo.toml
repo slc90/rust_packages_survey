@@ -6,6 +6,10 @@ authors.workspace = true
 license.workspace = true
 description = "UI components for Rust packages survey"
 
+[features]
+default = []
+cuda = ["deep_learning/cuda"]
+
 [dependencies]
 bevy = { version = "0.18", features = ["experimental_bevy_ui_widgets"] }
 i18n = { path = "../i18n" }

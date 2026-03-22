@@ -28,6 +28,9 @@ pub struct RuntimeDirectories {
 /// 运行时设备类型。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuntimeDeviceKind {
+	/// CPU 设备。
+	Cpu,
+
 	/// CUDA 设备。
 	Cuda,
 }
@@ -36,6 +39,8 @@ impl RuntimeDeviceKind {
 	/// 获取设备标签。
 	pub fn as_label(self) -> &'static str {
 		match self {
+			Self::Cpu => "cpu",
+
 			Self::Cuda => "cuda",
 		}
 	}
@@ -105,10 +110,13 @@ pub fn initialize_runtime() -> Result<CandleRuntime, DeepLearningError> {
 	let directories = initialize_runtime_directories()?;
 	let device =
 		Device::cuda_if_available(0).map_err(|error| DeepLearningError::InferenceFailed {
-			message: format!("初始化 CUDA 设备失败: {error}"),
+			message: format!("初始化推理设备失败: {error}"),
 		})?;
-	let device_kind = RuntimeDeviceKind::Cuda;
-	let device_label = "cuda:0".to_string();
+	let (device_kind, device_label) = if device.is_cuda() {
+		(RuntimeDeviceKind::Cuda, "cuda:0".to_string())
+	} else {
+		(RuntimeDeviceKind::Cpu, "cpu".to_string())
+	};
 
 	Ok(CandleRuntime {
 		directories,

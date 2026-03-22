@@ -1,8 +1,8 @@
 [
   {
-    "label": "Run (Bevy Dev, dynamic linking)",
+    "label": "Run (Bevy Dev)",
     "command": "cargo",
-    "args": ["run", "--features", "bevy/dynamic_linking"],
+    "args": ["run", "-p", "entry"],
     // Env overrides for the command, will be appended to the terminal's environment from the settings.
     "env": { "foo": "bar" },
     // Current working directory to spawn the command into, defaults to current project root.
@@ -43,5 +43,18 @@
     "show_command": false,
     // Represents the tags for inline runnable indicators, or spawning multiple tasks at once.
     // "tags": []
+  },
+  {
+    "label": "Run (Bevy Dev, CUDA)",
+    "command": "cargo",
+    "args": ["run", "-p", "entry", "--features", "cuda"],
+    "env": { "foo": "bar" },
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "never",
+    "shell": "system",
+    "show_summary": false,
+    "show_command": false,
   },
 ]

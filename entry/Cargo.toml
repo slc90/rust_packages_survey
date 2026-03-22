@@ -6,6 +6,10 @@ authors.workspace = true
 license.workspace = true
 description = "程序的入口"
 
+[features]
+default = []
+cuda = ["ui/cuda"]
+
 [dependencies]
 bevy = { workspace = true }
 logger = { path = "../logger" }
