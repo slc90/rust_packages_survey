@@ -1,10 +1,13 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Instant};
 
 use bevy::prelude::*;
+use bevy::tasks::Task;
 use deep_learning::{
+	error::DeepLearningError,
 	image_generation::{
 		ImageGenerationModelKind, ImageGenerationRequest, ImageGenerationResolution,
 	},
+	runtime::InferenceOutput,
 	runtime::RuntimeDirectories,
 	separation::SeparationRequest,
 	task::DlTaskId,
@@ -39,6 +42,12 @@ pub struct DeepLearningPageState {
 
 	/// Whisper 是否输出时间戳。
 	pub whisper_with_timestamps: bool,
+
+	/// Whisper 当前进度。
+	pub whisper_progress: f32,
+
+	/// Whisper 当前状态文本。
+	pub whisper_status_text: String,
 
 	/// 翻译选中的输入文件。
 	pub translation_input_file: Option<PathBuf>,
@@ -95,6 +104,8 @@ impl DeepLearningPageState {
 			whisper_input_file: None,
 			whisper_language_hint: WhisperLanguageHint::Auto,
 			whisper_with_timestamps: true,
+			whisper_progress: 0.0,
+			whisper_status_text: "Whisper 进度：等待任务".to_string(),
 			translation_input_file: None,
 			translation_source_language: TranslationSourceLanguage::English,
 			tts_input_file: None,
@@ -168,28 +179,24 @@ impl DeepLearningPageState {
 	}
 }
 
-/// 模拟中的后台任务。
-#[derive(Debug, Clone)]
-pub struct PendingMockTask {
+/// 后台推理任务。
+pub struct PendingInferenceTask {
 	/// 任务 ID。
 	pub id: DlTaskId,
 
 	/// 任务类型。
 	pub kind: deep_learning::task::DlTaskKind,
 
-	/// 完成倒计时。
-	pub timer: Timer,
+	/// 异步任务句柄。
+	pub task: Task<Result<InferenceOutput, DeepLearningError>>,
 
-	/// 可选结果摘要。
-	pub summary: Option<String>,
-
-	/// 可选输出路径。
-	pub output_path: Option<String>,
+	/// 任务启动时间。
+	pub started_at: Instant,
 }
 
-/// 模拟任务队列资源。
-#[derive(Resource, Default, Debug)]
+/// 后台推理任务队列资源。
+#[derive(Resource, Default)]
 pub struct DeepLearningPendingTasks {
 	/// 当前待完成任务列表。
-	pub tasks: Vec<PendingMockTask>,
+	pub tasks: Vec<PendingInferenceTask>,
 }

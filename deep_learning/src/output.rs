@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::error::DeepLearningError;
+use crate::{error::DeepLearningError, model::workspace_root_dir};
 
 /// 文本输出结果。
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub struct ImageOutput {
 
 /// 获取深度学习输出根目录。
 pub fn output_root_dir() -> PathBuf {
-	PathBuf::from("deep_learning_output")
+	workspace_root_dir().join("deep_learning_output")
 }
 
 /// 创建所有输出目录。

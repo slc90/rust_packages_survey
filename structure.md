@@ -221,3 +221,10 @@ rust_packages_survey/
 > - add `deep_learning/src/image_generation.rs` for image generation model preflight and PNG output
 > - deep learning test page now supports prompt-file selection, size/model/seed/steps toggles and in-page image preview
 > - Phase 5 currently completes model directory preflight, request snapshot generation and reusable PNG preview output for image generation
+>
+> 2026-03-22 Deep Learning Whisper CUDA Update
+>
+> - `deep_learning/src/runtime.rs` now requires CUDA-only initialization and fails fast when CUDA is unavailable
+> - `deep_learning/src/whisper.rs` now completes real `openai/whisper-base` Candle inference against `deepl_models/whisper_base/`
+> - Whisper tokenizer loading now merges `vocab.json` and `added_tokens.json`, fixing language/control token lookup such as `<|ja|>`
+> - deep learning test page result area now expands Whisper text output directly from the generated result file

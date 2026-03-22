@@ -174,6 +174,34 @@ fn spawn_whisper_section(builder: &mut ChildSpawnerCommands, state: &DeepLearnin
 				TextColor(Color::srgb(0.12, 0.12, 0.12)),
 				DeepLearningWhisperConfigTextMarker,
 			));
+			section.spawn((
+				Node {
+					width: Val::Percent(100.0),
+					height: Val::Px(18.0),
+					border: UiRect::all(Val::Px(1.0)),
+					..default()
+				},
+				BorderColor::all(Color::srgb(0.58, 0.66, 0.72)),
+				BackgroundColor(Color::srgb(0.85, 0.90, 0.94)),
+				children![(
+					Node {
+						width: Val::Percent(0.0),
+						height: Val::Percent(100.0),
+						..default()
+					},
+					BackgroundColor(Color::srgb(0.18, 0.55, 0.82)),
+					DeepLearningWhisperProgressFillMarker,
+				)],
+			));
+			section.spawn((
+				Text::new(&state.whisper_status_text),
+				TextFont {
+					font_size: 14.0,
+					..default()
+				},
+				TextColor(Color::srgb(0.12, 0.12, 0.12)),
+				DeepLearningWhisperProgressTextMarker,
+			));
 		});
 }
 

@@ -14,6 +14,7 @@ use crate::{
 		ensure_model_weights_exist, model_dir, model_weights_path,
 	},
 	output::output_root_dir,
+	runtime::{CandleRuntime, InferenceOutput, analyze_text},
 };
 
 /// 图像生成分辨率预设。
@@ -233,6 +234,30 @@ pub fn generate_image_preview_png(
 		})?;
 
 	Ok(output_path)
+}
+
+/// 执行图像生成最小推理闭环。
+pub fn run_image_generation_inference(
+	request: &ImageGenerationRequest,
+	runtime: &CandleRuntime,
+) -> Result<InferenceOutput, DeepLearningError> {
+	let descriptor = ensure_image_generation_model_ready(request.model)?;
+	save_image_generation_request_snapshot(request)?;
+	let prompt = std::fs::read_to_string(&request.prompt_path).map_err(|error| {
+		DeepLearningError::InferenceFailed {
+			message: format!("读取 Prompt 文件失败: {error}"),
+		}
+	})?;
+	let signature = analyze_text(prompt.trim(), runtime)?;
+	let output_path = generate_image_preview_png(request)?;
+
+	Ok(InferenceOutput {
+		summary: format!(
+			"图像生成推理已完成，model={}，device={}，energy={:.4}",
+			descriptor.id, runtime.device_label, signature.energy
+		),
+		output_path: Some(output_path),
+	})
 }
 
 /// 为图像增加视觉边框，便于在 UI 中区分不同模式。

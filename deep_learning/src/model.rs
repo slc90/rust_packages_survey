@@ -39,7 +39,7 @@ pub struct ModelDescriptor {
 
 /// 获取项目根目录下的模型根目录。
 pub fn model_root_dir() -> PathBuf {
-	PathBuf::from("deepl_models")
+	workspace_root_dir().join("deepl_models")
 }
 
 /// 获取模型能力对应的目录名。
@@ -96,4 +96,39 @@ pub fn ensure_model_weights_exist(path: &Path) -> Result<(), DeepLearningError> 
 	Err(DeepLearningError::ModelFileMissing {
 		path: path.to_path_buf(),
 	})
+}
+
+/// 定位当前工作区根目录。
+///
+/// 优先从当前工作目录向上寻找，兼容通过编辑器直接运行 `entry` 的场景；
+/// 如果当前目录链路找不到，再回退到可执行文件所在目录向上寻找。
+pub fn workspace_root_dir() -> PathBuf {
+	if let Ok(current_dir) = std::env::current_dir()
+		&& let Some(root) = find_workspace_root_from(&current_dir)
+	{
+		return root;
+	}
+
+	if let Ok(current_exe) = std::env::current_exe()
+		&& let Some(exe_dir) = current_exe.parent()
+		&& let Some(root) = find_workspace_root_from(exe_dir)
+	{
+		return root;
+	}
+
+	PathBuf::from(".")
+}
+
+/// 从指定目录向上查找工作区根目录。
+fn find_workspace_root_from(start: &Path) -> Option<PathBuf> {
+	for directory in start.ancestors() {
+		let cargo_toml = directory.join("Cargo.toml");
+		let entry_manifest = directory.join("entry").join("Cargo.toml");
+		let deep_learning_manifest = directory.join("deep_learning").join("Cargo.toml");
+		if cargo_toml.exists() && entry_manifest.exists() && deep_learning_manifest.exists() {
+			return Some(directory.to_path_buf());
+		}
+	}
+
+	None
 }

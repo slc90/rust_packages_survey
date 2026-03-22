@@ -8,3 +8,4 @@ pub mod task;
 pub mod translation;
 pub mod tts;
 pub mod whisper;
+mod whisper_impl;

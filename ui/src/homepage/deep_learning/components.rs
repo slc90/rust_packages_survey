@@ -40,6 +40,14 @@ pub struct DeepLearningWhisperFileTextMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperConfigTextMarker;
 
+/// Whisper 进度文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningWhisperProgressTextMarker;
+
+/// Whisper 进度条填充标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningWhisperProgressFillMarker;
+
 /// 翻译选择文件按钮标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningTranslationOpenFileButtonMarker;

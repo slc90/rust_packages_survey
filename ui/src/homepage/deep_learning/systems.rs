@@ -2,26 +2,19 @@ use bevy::{
 	asset::RenderAssetUsages,
 	prelude::*,
 	render::render_resource::{Extent3d, TextureDimension, TextureFormat},
+	tasks::AsyncComputeTaskPool,
 };
 use deep_learning::{
-	error::DeepLearningError,
-	image_generation::{
-		ImageGenerationModelKind, ImageGenerationRequest, ImageGenerationResolution,
-		ensure_image_generation_model_ready, generate_image_preview_png,
-		save_image_generation_request_snapshot,
-	},
+	image_generation::{ImageGenerationModelKind, ImageGenerationResolution},
+	runtime::execute_task,
 	runtime::initialize_runtime_directories,
-	separation::{ensure_separation_model_ready, save_separation_request_snapshot},
 	task::{
 		DlTaskId, DlTaskKind, DlTaskPayload, DlTaskRequestMessage, DlTaskResultMessage,
 		DlTaskState, DlTaskStatusMessage,
 	},
-	translation::{
-		TranslationSourceLanguage, ensure_translation_model_ready,
-		save_translation_request_snapshot,
-	},
-	tts::{TtsLanguage, ensure_tts_model_ready, save_tts_request_snapshot},
-	whisper::{WhisperLanguageHint, ensure_whisper_model_ready, save_whisper_request_snapshot},
+	translation::TranslationSourceLanguage,
+	tts::TtsLanguage,
+	whisper::WhisperLanguageHint,
 };
 
 use crate::{
@@ -51,10 +44,11 @@ use crate::{
 				DeepLearningTtsOpenFileButtonMarker, DeepLearningTtsSpeedCycleButtonMarker,
 				DeepLearningTtsStartButtonMarker, DeepLearningWhisperConfigTextMarker,
 				DeepLearningWhisperFileTextMarker, DeepLearningWhisperLanguageCycleButtonMarker,
-				DeepLearningWhisperOpenFileButtonMarker, DeepLearningWhisperStartButtonMarker,
+				DeepLearningWhisperOpenFileButtonMarker, DeepLearningWhisperProgressFillMarker,
+				DeepLearningWhisperProgressTextMarker, DeepLearningWhisperStartButtonMarker,
 				DeepLearningWhisperTimestampToggleButtonMarker,
 			},
-			resources::{DeepLearningPageState, DeepLearningPendingTasks, PendingMockTask},
+			resources::{DeepLearningPageState, DeepLearningPendingTasks, PendingInferenceTask},
 		},
 	},
 };
@@ -82,25 +76,6 @@ pub use controls_extra::{
 pub use layout::{on_enter, on_exit};
 pub use sync::{sync_result_messages, sync_status_messages};
 pub use tasks::{handle_task_requests, update_pending_tasks};
-
-/// 预检任务参数。
-struct PreflightTaskArgs {
-	/// 任务 ID。
-	id: DlTaskId,
-	/// 任务类型。
-	kind: DlTaskKind,
-	/// 模型预检结果。
-	model_ready:
-		Result<deep_learning::model::ModelDescriptor, deep_learning::error::DeepLearningError>,
-	/// 输出路径结果。
-	output_path: Result<String, deep_learning::error::DeepLearningError>,
-	/// 成功摘要。
-	success_summary: &'static str,
-	/// 模型错误摘要。
-	model_error_summary: &'static str,
-	/// 输出错误摘要。
-	output_error_summary: &'static str,
-}
 
 fn spawn_action_button<T: Component>(marker: T, label: &str) -> impl Bundle {
 	(
@@ -327,11 +302,4 @@ fn load_preview_texture_from_path(
 	}
 
 	Err("图片预览纹理句柄不存在".to_string())
-}
-
-fn prepare_image_generation_output(
-	request: &ImageGenerationRequest,
-) -> Result<std::path::PathBuf, DeepLearningError> {
-	save_image_generation_request_snapshot(request)?;
-	generate_image_preview_png(request)
 }
