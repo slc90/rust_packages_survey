@@ -8,6 +8,14 @@ pub struct DeepLearningContentMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningSmokeTestButtonMarker;
 
+/// 页面状态文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningStatusTextMarker;
+
+/// 页面结果文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningResultTextMarker;
+
 /// Whisper 打开文件按钮标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperOpenFileButtonMarker;
@@ -23,14 +31,6 @@ pub struct DeepLearningWhisperTimestampToggleButtonMarker;
 /// Whisper 语言切换按钮标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperLanguageCycleButtonMarker;
-
-/// 页面状态文本标记。
-#[derive(Component, Default, Clone, Copy, Debug)]
-pub struct DeepLearningStatusTextMarker;
-
-/// 页面结果文本标记。
-#[derive(Component, Default, Clone, Copy, Debug)]
-pub struct DeepLearningResultTextMarker;
 
 /// Whisper 文件文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
@@ -52,6 +52,14 @@ pub struct DeepLearningTranslationLanguageCycleButtonMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningTranslationStartButtonMarker;
 
+/// 翻译文件文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationFileTextMarker;
+
+/// 翻译配置文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationConfigTextMarker;
+
 /// TTS 选择文件按钮标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningTtsOpenFileButtonMarker;
@@ -67,14 +75,6 @@ pub struct DeepLearningTtsSpeedCycleButtonMarker;
 /// TTS 开始按钮标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningTtsStartButtonMarker;
-
-/// 翻译文件文本标记。
-#[derive(Component, Default, Clone, Copy, Debug)]
-pub struct DeepLearningTranslationFileTextMarker;
-
-/// 翻译配置文本标记。
-#[derive(Component, Default, Clone, Copy, Debug)]
-pub struct DeepLearningTranslationConfigTextMarker;
 
 /// TTS 文件文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
@@ -95,3 +95,43 @@ pub struct DeepLearningSeparationStartButtonMarker;
 /// 人声分离文件文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningSeparationFileTextMarker;
+
+/// 图像生成选择 Prompt 按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationOpenFileButtonMarker;
+
+/// 图像生成分辨率切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationResolutionCycleButtonMarker;
+
+/// 图像生成随机种子切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationSeedCycleButtonMarker;
+
+/// 图像生成步数切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationStepsCycleButtonMarker;
+
+/// 图像生成模型切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationModelCycleButtonMarker;
+
+/// 图像生成开始按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationStartButtonMarker;
+
+/// 图像生成 Prompt 文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationFileTextMarker;
+
+/// 图像生成配置文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationConfigTextMarker;
+
+/// 图像生成预览图片标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationPreviewImageMarker;
+
+/// 图像生成预览说明文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningImageGenerationPreviewTextMarker;

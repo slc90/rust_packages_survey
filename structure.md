@@ -215,3 +215,9 @@ rust_packages_survey/
 > - add `deep_learning/src/separation.rs` for vocal separation request preflight
 > - deep learning test page now supports separation audio-file selection and request snapshot output
 > - Phase 4 currently completes model directory preflight and request snapshot generation for separation before the Candle inference core is wired in
+>
+> 2026-03-22 Deep Learning Phase 5 Update
+>
+> - add `deep_learning/src/image_generation.rs` for image generation model preflight and PNG output
+> - deep learning test page now supports prompt-file selection, size/model/seed/steps toggles and in-page image preview
+> - Phase 5 currently completes model directory preflight, request snapshot generation and reusable PNG preview output for image generation

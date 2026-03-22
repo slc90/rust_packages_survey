@@ -1,4 +1,5 @@
 pub mod error;
+pub mod image_generation;
 pub mod model;
 pub mod output;
 pub mod runtime;

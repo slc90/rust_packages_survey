@@ -2750,6 +2750,7 @@ name = "deep_learning"
 version = "0.1.1"
 dependencies = [
  "bevy",
+ "image 0.25.9",
  "thiserror 2.0.17",
 ]
 

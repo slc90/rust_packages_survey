@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::image_generation::ImageGenerationRequest;
 use crate::separation::SeparationRequest;
 use crate::translation::TranslationRequest;
 use crate::tts::TtsRequest;
@@ -74,6 +75,9 @@ pub enum DlTaskPayload {
 
 	/// Whisper 请求。
 	Whisper(WhisperRequest),
+
+	/// 图像生成请求。
+	ImageGeneration(ImageGenerationRequest),
 
 	/// TTS 请求。
 	Tts(TtsRequest),

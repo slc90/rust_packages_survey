@@ -2,6 +2,9 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 use deep_learning::{
+	image_generation::{
+		ImageGenerationModelKind, ImageGenerationRequest, ImageGenerationResolution,
+	},
 	runtime::RuntimeDirectories,
 	separation::SeparationRequest,
 	task::DlTaskId,
@@ -57,11 +60,32 @@ pub struct DeepLearningPageState {
 
 	/// 人声分离选中的输入文件。
 	pub separation_input_file: Option<PathBuf>,
+
+	/// 图片生成 Prompt 文件。
+	pub image_generation_prompt_file: Option<PathBuf>,
+
+	/// 图片生成分辨率。
+	pub image_generation_resolution: ImageGenerationResolution,
+
+	/// 图片生成随机种子。
+	pub image_generation_seed: u64,
+
+	/// 图片生成采样步数。
+	pub image_generation_steps: u32,
+
+	/// 图片生成模型模式。
+	pub image_generation_model: ImageGenerationModelKind,
+
+	/// 图片预览纹理句柄。
+	pub image_generation_preview_texture: Handle<Image>,
+
+	/// 图片预览输出路径。
+	pub image_generation_preview_path: Option<PathBuf>,
 }
 
 impl DeepLearningPageState {
 	/// 根据运行时目录创建页面状态。
-	pub fn new(directories: &RuntimeDirectories) -> Self {
+	pub fn new(directories: &RuntimeDirectories, preview_texture: Handle<Image>) -> Self {
 		Self {
 			model_root: directories.model_root.display().to_string(),
 			output_root: directories.output_root.display().to_string(),
@@ -78,6 +102,13 @@ impl DeepLearningPageState {
 			tts_speaker: "default".to_string(),
 			tts_speed: 1.0,
 			separation_input_file: None,
+			image_generation_prompt_file: None,
+			image_generation_resolution: ImageGenerationResolution::Size1024x768,
+			image_generation_seed: 20260322,
+			image_generation_steps: 4,
+			image_generation_model: ImageGenerationModelKind::SdxlTurbo,
+			image_generation_preview_texture: preview_texture,
+			image_generation_preview_path: None,
 		}
 	}
 
@@ -122,6 +153,18 @@ impl DeepLearningPageState {
 	pub fn build_separation_request(&self) -> Option<SeparationRequest> {
 		let input_path = self.separation_input_file.clone()?;
 		Some(SeparationRequest { input_path })
+	}
+
+	/// 获取图像生成请求。
+	pub fn build_image_generation_request(&self) -> Option<ImageGenerationRequest> {
+		let prompt_path = self.image_generation_prompt_file.clone()?;
+		Some(ImageGenerationRequest {
+			prompt_path,
+			resolution: self.image_generation_resolution,
+			seed: self.image_generation_seed,
+			steps: self.image_generation_steps,
+			model: self.image_generation_model,
+		})
 	}
 }
 

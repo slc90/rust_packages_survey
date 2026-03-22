@@ -4,6 +4,9 @@ use deep_learning::task::{DlTaskRequestMessage, DlTaskResultMessage, DlTaskStatu
 use crate::homepage::{
 	common::Functions,
 	deep_learning::systems::{
+		handle_image_generation_model_cycle_click, handle_image_generation_open_file_click,
+		handle_image_generation_resolution_cycle_click, handle_image_generation_seed_cycle_click,
+		handle_image_generation_start_click, handle_image_generation_steps_cycle_click,
 		handle_separation_open_file_click, handle_separation_start_click, handle_smoke_test_click,
 		handle_task_requests, handle_translation_language_cycle_click,
 		handle_translation_open_file_click, handle_translation_start_click,
@@ -36,12 +39,24 @@ impl Plugin for DeepLearningPlugin {
 					handle_translation_open_file_click,
 					handle_translation_language_cycle_click,
 					handle_translation_start_click,
-					handle_separation_open_file_click,
-					handle_separation_start_click,
 					handle_tts_open_file_click,
 					handle_tts_language_cycle_click,
 					handle_tts_speed_cycle_click,
 					handle_tts_start_click,
+					handle_separation_open_file_click,
+					handle_separation_start_click,
+					handle_image_generation_open_file_click,
+					handle_image_generation_resolution_cycle_click,
+					handle_image_generation_seed_cycle_click,
+					handle_image_generation_steps_cycle_click,
+					handle_image_generation_model_cycle_click,
+					handle_image_generation_start_click,
+				)
+					.run_if(in_state(Functions::DeepLearning)),
+			)
+			.add_systems(
+				Update,
+				(
 					handle_task_requests,
 					update_pending_tasks,
 					sync_status_messages,
