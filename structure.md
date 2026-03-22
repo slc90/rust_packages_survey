@@ -228,3 +228,8 @@ rust_packages_survey/
 > - `deep_learning/src/whisper.rs` now completes real `openai/whisper-base` Candle inference against `deepl_models/whisper_base/`
 > - Whisper tokenizer loading now merges `vocab.json` and `added_tokens.json`, fixing language/control token lookup such as `<|ja|>`
 > - deep learning test page result area now expands Whisper text output directly from the generated result file
+>
+> 2026-03-22 Logger Workspace Root Update
+>
+> - `logger/src/lib.rs` now resolves `logs/` from the workspace root before creating rolling log files
+> - launching `entry/src/main.rs` from editor working directories such as `entry/` no longer creates `entry/logs/`
