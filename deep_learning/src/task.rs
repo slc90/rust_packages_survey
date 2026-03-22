@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::separation::SeparationRequest;
 use crate::translation::TranslationRequest;
 use crate::tts::TtsRequest;
 use crate::whisper::WhisperRequest;
@@ -64,6 +65,9 @@ pub struct DlTaskRequestMessage {
 pub enum DlTaskPayload {
 	/// 空任务测试。
 	SmokeTest,
+
+	/// 人声分离请求。
+	Separation(SeparationRequest),
 
 	/// 翻译请求。
 	Translation(TranslationRequest),

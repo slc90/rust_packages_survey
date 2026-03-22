@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use deep_learning::{
 	runtime::RuntimeDirectories,
+	separation::SeparationRequest,
 	task::DlTaskId,
 	translation::{TranslationRequest, TranslationSourceLanguage},
 	tts::{TtsLanguage, TtsRequest},
@@ -53,6 +54,9 @@ pub struct DeepLearningPageState {
 
 	/// TTS 语速倍率。
 	pub tts_speed: f32,
+
+	/// 人声分离选中的输入文件。
+	pub separation_input_file: Option<PathBuf>,
 }
 
 impl DeepLearningPageState {
@@ -73,6 +77,7 @@ impl DeepLearningPageState {
 			tts_language: TtsLanguage::Chinese,
 			tts_speaker: "default".to_string(),
 			tts_speed: 1.0,
+			separation_input_file: None,
 		}
 	}
 
@@ -111,6 +116,12 @@ impl DeepLearningPageState {
 			speaker: self.tts_speaker.clone(),
 			speed: self.tts_speed,
 		})
+	}
+
+	/// 获取人声分离请求。
+	pub fn build_separation_request(&self) -> Option<SeparationRequest> {
+		let input_path = self.separation_input_file.clone()?;
+		Some(SeparationRequest { input_path })
 	}
 }
 

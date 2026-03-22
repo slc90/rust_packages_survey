@@ -2,6 +2,7 @@ pub mod error;
 pub mod model;
 pub mod output;
 pub mod runtime;
+pub mod separation;
 pub mod task;
 pub mod translation;
 pub mod tts;

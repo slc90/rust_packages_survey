@@ -83,3 +83,15 @@ pub struct DeepLearningTtsFileTextMarker;
 /// TTS 配置文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningTtsConfigTextMarker;
+
+/// 人声分离选择文件按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningSeparationOpenFileButtonMarker;
+
+/// 人声分离开始按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningSeparationStartButtonMarker;
+
+/// 人声分离文件文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningSeparationFileTextMarker;

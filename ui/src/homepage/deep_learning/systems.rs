@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use deep_learning::{
 	runtime::initialize_runtime_directories,
+	separation::{ensure_separation_model_ready, save_separation_request_snapshot},
 	task::{
 		DlTaskId, DlTaskKind, DlTaskPayload, DlTaskRequestMessage, DlTaskResultMessage,
 		DlTaskState, DlTaskStatusMessage,
@@ -20,8 +21,10 @@ use crate::{
 		deep_learning::{
 			components::{
 				DeepLearningContentMarker, DeepLearningResultTextMarker,
-				DeepLearningSmokeTestButtonMarker, DeepLearningStatusTextMarker,
-				DeepLearningTranslationConfigTextMarker, DeepLearningTranslationFileTextMarker,
+				DeepLearningSeparationFileTextMarker, DeepLearningSeparationOpenFileButtonMarker,
+				DeepLearningSeparationStartButtonMarker, DeepLearningSmokeTestButtonMarker,
+				DeepLearningStatusTextMarker, DeepLearningTranslationConfigTextMarker,
+				DeepLearningTranslationFileTextMarker,
 				DeepLearningTranslationLanguageCycleButtonMarker,
 				DeepLearningTranslationOpenFileButtonMarker,
 				DeepLearningTranslationStartButtonMarker, DeepLearningTtsConfigTextMarker,
@@ -130,6 +133,18 @@ fn pick_whisper_input_file() -> Option<std::path::PathBuf> {
 		&[
 			("Audio/Video", &["mp3", "wav", "m4a", "mp4"]),
 			("All Supported", &["mp3", "wav", "m4a", "mp4"]),
+		],
+	)
+}
+
+/// 选择人声分离输入文件。
+fn pick_separation_input_file() -> Option<std::path::PathBuf> {
+	pick_single_file(
+		default_data_directory().as_deref(),
+		"选择人声分离输入文件",
+		&[
+			("Audio", &["mp3", "wav", "m4a"]),
+			("All Supported", &["mp3", "wav", "m4a"]),
 		],
 	)
 }
@@ -444,6 +459,57 @@ pub fn on_enter(
 								},
 								TextColor(Color::srgb(0.12, 0.12, 0.12)),
 								DeepLearningTtsConfigTextMarker,
+							));
+						});
+
+					column
+						.spawn((
+							Node {
+								width: Val::Percent(100.0),
+								flex_direction: FlexDirection::Column,
+								padding: UiRect::all(Val::Px(12.0)),
+								row_gap: Val::Px(10.0),
+								border: UiRect::all(Val::Px(1.0)),
+								..default()
+							},
+							BorderColor::all(Color::srgb(0.72, 0.60, 0.68)),
+							BackgroundColor(Color::srgb(0.98, 0.93, 0.96)),
+						))
+						.with_children(|section| {
+							section.spawn((
+								Text::new("人声分离"),
+								TextFont {
+									font_size: 18.0,
+									..default()
+								},
+								TextColor(Color::BLACK),
+							));
+							section.spawn((
+								Node {
+									width: Val::Percent(100.0),
+									column_gap: Val::Px(8.0),
+									flex_wrap: FlexWrap::Wrap,
+									..default()
+								},
+								children![
+									spawn_action_button(
+										DeepLearningSeparationOpenFileButtonMarker,
+										"分离 选择音频",
+									),
+									spawn_action_button(
+										DeepLearningSeparationStartButtonMarker,
+										"分离 开始任务",
+									),
+								],
+							));
+							section.spawn((
+								Text::new("分离文件：未选择"),
+								TextFont {
+									font_size: 16.0,
+									..default()
+								},
+								TextColor(Color::srgb(0.12, 0.12, 0.12)),
+								DeepLearningSeparationFileTextMarker,
 							));
 						});
 
@@ -832,6 +898,70 @@ pub fn handle_tts_start_click(
 	}
 }
 
+/// 处理人声分离选择文件。
+pub fn handle_separation_open_file_click(
+	interaction_query: Query<
+		&Interaction,
+		(
+			Changed<Interaction>,
+			With<DeepLearningSeparationOpenFileButtonMarker>,
+		),
+	>,
+	mut state: ResMut<DeepLearningPageState>,
+	mut text_query: Query<&mut Text, With<DeepLearningSeparationFileTextMarker>>,
+) {
+	for interaction in &interaction_query {
+		if !matches!(interaction, Interaction::Pressed) {
+			continue;
+		}
+
+		let Some(path) = pick_separation_input_file() else {
+			continue;
+		};
+
+		state.separation_input_file = Some(path.clone());
+		update_single_text(&mut text_query, &format!("分离文件：{}", path.display()));
+	}
+}
+
+/// 处理人声分离开始按钮。
+pub fn handle_separation_start_click(
+	interaction_query: Query<
+		&Interaction,
+		(
+			Changed<Interaction>,
+			With<DeepLearningSeparationStartButtonMarker>,
+		),
+	>,
+	mut state: ResMut<DeepLearningPageState>,
+	mut writer: MessageWriter<DlTaskRequestMessage>,
+	mut status_writer: MessageWriter<DlTaskStatusMessage>,
+) {
+	for interaction in &interaction_query {
+		if !matches!(interaction, Interaction::Pressed) {
+			continue;
+		}
+
+		let Some(request) = state.build_separation_request() else {
+			status_writer.write(DlTaskStatusMessage {
+				id: DlTaskId(0),
+				kind: DlTaskKind::Separation,
+				state: DlTaskState::Failed,
+				progress: 0.0,
+				message: "请先选择人声分离输入文件".to_string(),
+			});
+			continue;
+		};
+
+		let task_id = state.allocate_task_id();
+		writer.write(DlTaskRequestMessage {
+			id: task_id,
+			kind: DlTaskKind::Separation,
+			payload: DlTaskPayload::Separation(request),
+		});
+	}
+}
+
 /// 处理深度学习任务请求。
 pub fn handle_task_requests(
 	mut messages: MessageReader<DlTaskRequestMessage>,
@@ -910,6 +1040,23 @@ pub fn handle_task_requests(
 						success_summary: "Phase 3 TTS 预检完成，已生成任务快照",
 						model_error_summary: "TTS 模型目录或权重缺失",
 						output_error_summary: "TTS 任务快照写出失败",
+					},
+					&mut pending_tasks,
+					&mut status_writer,
+					&mut result_writer,
+				);
+			}
+			DlTaskPayload::Separation(request) => {
+				handle_preflight_task(
+					PreflightTaskArgs {
+						id: message.id,
+						kind: message.kind,
+						model_ready: ensure_separation_model_ready(),
+						output_path: save_separation_request_snapshot(request)
+							.map(|path| path.display().to_string()),
+						success_summary: "Phase 4 人声分离预检完成，已生成任务快照",
+						model_error_summary: "人声分离模型目录或权重缺失",
+						output_error_summary: "人声分离任务快照写出失败",
 					},
 					&mut pending_tasks,
 					&mut status_writer,

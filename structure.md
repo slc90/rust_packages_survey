@@ -209,3 +209,9 @@ rust_packages_survey/
 > - add `deep_learning/src/translation.rs` and `deep_learning/src/tts.rs` for translation and TTS request preflight
 > - deep learning test page now supports translation and TTS text-file selection, parameter toggles and request snapshot output
 > - Phase 3 currently completes model directory preflight and request snapshot generation for translation and TTS before the Candle inference core is wired in
+>
+> 2026-03-22 Deep Learning Phase 4 Update
+>
+> - add `deep_learning/src/separation.rs` for vocal separation request preflight
+> - deep learning test page now supports separation audio-file selection and request snapshot output
+> - Phase 4 currently completes model directory preflight and request snapshot generation for separation before the Candle inference core is wired in
