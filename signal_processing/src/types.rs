@@ -39,6 +39,16 @@ pub struct SpectrumPoint {
 	pub value: f32,
 }
 
+/// Welch 功率谱估计配置。
+#[derive(Debug, Clone, Copy)]
+pub struct WelchSpectrumConfig {
+	/// 每个 Welch 分段的样本长度。
+	pub segment_length: usize,
+
+	/// 相邻 Welch 分段之间的重叠样本数。
+	pub overlap_length: usize,
+}
+
 /// 滤波器类别。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FilterKind {

@@ -153,9 +153,3 @@ rust_packages_survey/
 ├── rustfmt.toml                            # Rust代码格式化配置
 └── structure.md                            # 项目目录结构文档
 ```
-
-> 2026-03-22 Medical Image DICOM Compatibility Update
->
-> - `medical_image/src/dicom_loader.rs` 现在会跳过 `.WeDrive` 等隐藏同步附带文件，并记录 DICOM 元数据与像素解码日志
-> - DICOM 加载现在兼容 `OT` 模态以及 `RGB` 单帧切片，加载时会转换为灰度体数据以复用现有渲染链路
-> - 医学影像页新增 `加载DICOM目录`，并已有本地测试覆盖 `data/CT_DICOM` 目录加载
