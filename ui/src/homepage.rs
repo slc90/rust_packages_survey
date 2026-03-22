@@ -1,6 +1,7 @@
 pub mod about;
 pub mod audio_player;
 pub mod common;
+pub mod deep_learning;
 pub mod medical_image;
 pub mod playback_plot;
 pub mod plugin;

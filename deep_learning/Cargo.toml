@@ -1,0 +1,11 @@
+[package]
+name = "deep_learning"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description.workspace = true
+
+[dependencies]
+bevy.workspace = true
+thiserror = "2.0.17"

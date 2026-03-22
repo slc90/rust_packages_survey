@@ -2746,6 +2746,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7a1e2f27636f116493b8b860f5546edb47c8d8f8ea73e1d2a20be88e28d1fea"
 
 [[package]]
+name = "deep_learning"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "deranged"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8152,6 +8160,7 @@ dependencies = [
  "audio_player",
  "bevy",
  "config",
+ "deep_learning",
  "edf_io",
  "i18n",
  "image 0.25.9",

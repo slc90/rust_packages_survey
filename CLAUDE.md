@@ -78,6 +78,6 @@ cargo build --workspace
 5. git message用中文，要写清楚功能和修复的问题
 6. 方案写到`docs/`下
 7. 所有函数必须有注释说明，但是不要写doctest
-8. struct中各个属性中间必须固定空一行，struct和属性也必须有注释说明
+8. struct/enum中各个属性中间必须固定空一行，struct/enum和属性也必须有注释说明
 9. 算法型代码必须有注释说明原理，有论文支撑的话需要注明引用的论文名称和doi
 10. trait接口必须有注释说明

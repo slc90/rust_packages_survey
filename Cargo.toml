@@ -4,6 +4,7 @@ members = [
     "logger",
     "utils",
     "ui",
+    "deep_learning",
     "screenshot",
     "report_generator",
     "signal_processing",

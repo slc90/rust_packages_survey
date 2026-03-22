@@ -21,4 +21,5 @@ pub enum LanguageKey {
 	VideoPlayer,
 	AudioPlayer,
 	Screenshot,
+	DeepLearning,
 }

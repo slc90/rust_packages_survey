@@ -1,6 +1,7 @@
 use crate::homepage::about::plugin::AboutPlugin;
 use crate::homepage::audio_player::plugin::AudioPlayerPlugin;
 use crate::homepage::common::{ChangeFunctionMessage, Functions};
+use crate::homepage::deep_learning::plugin::DeepLearningPlugin;
 use crate::homepage::medical_image::plugin::MedicalImagePlugin;
 use crate::homepage::playback_plot::plugin::PlaybackPlotPlugin;
 use crate::homepage::realtime_plot::plugin::RealtimePlotPlugin;
@@ -32,6 +33,7 @@ impl Plugin for HomepagePlugin {
 		app.add_plugins(VideoPlayerPlugin);
 		app.add_plugins(AudioPlayerPlugin);
 		app.add_plugins(ScreenshotPlugin);
+		app.add_plugins(DeepLearningPlugin);
 		app.add_plugins(SettingPlugin);
 		// 注册systems
 		app.add_systems(Update, change_function);

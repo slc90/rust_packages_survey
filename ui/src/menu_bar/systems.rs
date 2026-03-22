@@ -196,6 +196,20 @@ fn spawn_function_menu(
 						TextColor(Color::BLACK),
 					)],
 				),
+				(
+					FunctionMenuItemBundle::default(),
+					observe(
+						|_activated: On<Activate>,
+						 mut writer: MessageWriter<ChangeFunctionMessage>| {
+							debug!("点击深度学习按钮");
+							writer.write(ChangeFunctionMessage(Functions::DeepLearning));
+						}
+					),
+					children![(
+						Text::new(language_manager.lookup(LanguageKey::DeepLearning)),
+						TextColor(Color::BLACK),
+					)],
+				),
 			],
 		))
 		.id();

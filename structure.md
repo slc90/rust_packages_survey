@@ -186,3 +186,14 @@ rust_packages_survey/
 >
 > - `screenshot/` now includes Win32 current-display capture support for the monitor containing the main window
 > - screenshot test page `程序所在桌面截图` button now captures and saves the current display to `screenshots/`
+>
+> 2026-03-22 Deep Learning Plan Update
+>
+> - add `docs/深度学习设计方案.md` for the local AI module plan
+> - `docs/requirements.md` deep learning section now includes the design document entry
+>
+> 2026-03-22 Deep Learning Phase 1 Update
+>
+> - add `deep_learning/` crate for runtime directory initialization, model metadata and task/result messages
+> - add `ui/src/homepage/deep_learning/` for the Phase 1 test page shell and Bevy `Message`-based smoke task flow
+> - homepage `Functions`, menu bar and `i18n` now include the deep learning entry

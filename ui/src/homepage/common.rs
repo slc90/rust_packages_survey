@@ -24,6 +24,8 @@ pub enum Functions {
 	AudioPlayer,
 
 	Screenshot,
+
+	DeepLearning,
 }
 
 // ============================================================================
