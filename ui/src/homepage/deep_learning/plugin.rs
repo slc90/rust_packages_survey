@@ -4,7 +4,9 @@ use deep_learning::task::{DlTaskRequestMessage, DlTaskResultMessage, DlTaskStatu
 use crate::homepage::{
 	common::Functions,
 	deep_learning::systems::{
-		handle_smoke_test_click, handle_task_requests, on_enter, on_exit, sync_result_messages,
+		handle_smoke_test_click, handle_task_requests, handle_whisper_language_cycle_click,
+		handle_whisper_open_file_click, handle_whisper_start_click,
+		handle_whisper_timestamp_toggle_click, on_enter, on_exit, sync_result_messages,
 		sync_status_messages, update_pending_tasks,
 	},
 };
@@ -23,6 +25,10 @@ impl Plugin for DeepLearningPlugin {
 				Update,
 				(
 					handle_smoke_test_click,
+					handle_whisper_open_file_click,
+					handle_whisper_language_cycle_click,
+					handle_whisper_timestamp_toggle_click,
+					handle_whisper_start_click,
 					handle_task_requests,
 					update_pending_tasks,
 					sync_status_messages,

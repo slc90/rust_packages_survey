@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::whisper::WhisperRequest;
+
 /// 深度学习任务类型。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DlTaskKind {
@@ -50,6 +52,19 @@ pub struct DlTaskRequestMessage {
 
 	/// 任务类型。
 	pub kind: DlTaskKind,
+
+	/// 任务负载。
+	pub payload: DlTaskPayload,
+}
+
+/// 深度学习任务负载。
+#[derive(Debug, Clone)]
+pub enum DlTaskPayload {
+	/// 空任务测试。
+	SmokeTest,
+
+	/// Whisper 请求。
+	Whisper(WhisperRequest),
 }
 
 /// 深度学习任务状态消息。
@@ -82,4 +97,7 @@ pub struct DlTaskResultMessage {
 
 	/// 结果摘要。
 	pub summary: String,
+
+	/// 可选输出路径。
+	pub output_path: Option<String>,
 }

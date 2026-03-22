@@ -3,3 +3,4 @@ pub mod model;
 pub mod output;
 pub mod runtime;
 pub mod task;
+pub mod whisper;

@@ -197,3 +197,9 @@ rust_packages_survey/
 > - add `deep_learning/` crate for runtime directory initialization, model metadata and task/result messages
 > - add `ui/src/homepage/deep_learning/` for the Phase 1 test page shell and Bevy `Message`-based smoke task flow
 > - homepage `Functions`, menu bar and `i18n` now include the deep learning entry
+>
+> 2026-03-22 Deep Learning Phase 2 Update
+>
+> - add `deep_learning/src/whisper.rs` and extend task payloads for Whisper request preflight
+> - deep learning test page now supports Whisper file selection, language hint, timestamp toggle and request snapshot output
+> - Phase 2 currently completes model directory preflight and request snapshot generation before the Candle inference core is wired in
