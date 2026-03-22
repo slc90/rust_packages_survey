@@ -4,6 +4,8 @@ use bevy::prelude::*;
 use deep_learning::{
 	runtime::RuntimeDirectories,
 	task::DlTaskId,
+	translation::{TranslationRequest, TranslationSourceLanguage},
+	tts::{TtsLanguage, TtsRequest},
 	whisper::{WhisperLanguageHint, WhisperRequest},
 };
 
@@ -33,6 +35,24 @@ pub struct DeepLearningPageState {
 
 	/// Whisper 是否输出时间戳。
 	pub whisper_with_timestamps: bool,
+
+	/// 翻译选中的输入文件。
+	pub translation_input_file: Option<PathBuf>,
+
+	/// 翻译源语言。
+	pub translation_source_language: TranslationSourceLanguage,
+
+	/// TTS 选中的输入文件。
+	pub tts_input_file: Option<PathBuf>,
+
+	/// TTS 输出语言。
+	pub tts_language: TtsLanguage,
+
+	/// TTS 说话人。
+	pub tts_speaker: String,
+
+	/// TTS 语速倍率。
+	pub tts_speed: f32,
 }
 
 impl DeepLearningPageState {
@@ -47,6 +67,12 @@ impl DeepLearningPageState {
 			whisper_input_file: None,
 			whisper_language_hint: WhisperLanguageHint::Auto,
 			whisper_with_timestamps: true,
+			translation_input_file: None,
+			translation_source_language: TranslationSourceLanguage::English,
+			tts_input_file: None,
+			tts_language: TtsLanguage::Chinese,
+			tts_speaker: "default".to_string(),
+			tts_speed: 1.0,
 		}
 	}
 
@@ -64,6 +90,26 @@ impl DeepLearningPageState {
 			input_path,
 			language_hint: self.whisper_language_hint,
 			with_timestamps: self.whisper_with_timestamps,
+		})
+	}
+
+	/// 获取翻译请求。
+	pub fn build_translation_request(&self) -> Option<TranslationRequest> {
+		let input_path = self.translation_input_file.clone()?;
+		Some(TranslationRequest {
+			input_path,
+			source_language: self.translation_source_language,
+		})
+	}
+
+	/// 获取 TTS 请求。
+	pub fn build_tts_request(&self) -> Option<TtsRequest> {
+		let input_path = self.tts_input_file.clone()?;
+		Some(TtsRequest {
+			input_path,
+			language: self.tts_language,
+			speaker: self.tts_speaker.clone(),
+			speed: self.tts_speed,
 		})
 	}
 }

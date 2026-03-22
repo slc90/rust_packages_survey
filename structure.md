@@ -203,3 +203,9 @@ rust_packages_survey/
 > - add `deep_learning/src/whisper.rs` and extend task payloads for Whisper request preflight
 > - deep learning test page now supports Whisper file selection, language hint, timestamp toggle and request snapshot output
 > - Phase 2 currently completes model directory preflight and request snapshot generation before the Candle inference core is wired in
+>
+> 2026-03-22 Deep Learning Phase 3 Update
+>
+> - add `deep_learning/src/translation.rs` and `deep_learning/src/tts.rs` for translation and TTS request preflight
+> - deep learning test page now supports translation and TTS text-file selection, parameter toggles and request snapshot output
+> - Phase 3 currently completes model directory preflight and request snapshot generation for translation and TTS before the Candle inference core is wired in

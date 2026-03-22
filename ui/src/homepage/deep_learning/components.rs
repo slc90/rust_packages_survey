@@ -39,3 +39,47 @@ pub struct DeepLearningWhisperFileTextMarker;
 /// Whisper 配置文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperConfigTextMarker;
+
+/// 翻译选择文件按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationOpenFileButtonMarker;
+
+/// 翻译语言切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationLanguageCycleButtonMarker;
+
+/// 翻译开始按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationStartButtonMarker;
+
+/// TTS 选择文件按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsOpenFileButtonMarker;
+
+/// TTS 语言切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsLanguageCycleButtonMarker;
+
+/// TTS 语速切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsSpeedCycleButtonMarker;
+
+/// TTS 开始按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsStartButtonMarker;
+
+/// 翻译文件文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationFileTextMarker;
+
+/// 翻译配置文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTranslationConfigTextMarker;
+
+/// TTS 文件文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsFileTextMarker;
+
+/// TTS 配置文本标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningTtsConfigTextMarker;

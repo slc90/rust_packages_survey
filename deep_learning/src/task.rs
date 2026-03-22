@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::translation::TranslationRequest;
+use crate::tts::TtsRequest;
 use crate::whisper::WhisperRequest;
 
 /// 深度学习任务类型。
@@ -63,8 +65,14 @@ pub enum DlTaskPayload {
 	/// 空任务测试。
 	SmokeTest,
 
+	/// 翻译请求。
+	Translation(TranslationRequest),
+
 	/// Whisper 请求。
 	Whisper(WhisperRequest),
+
+	/// TTS 请求。
+	Tts(TtsRequest),
 }
 
 /// 深度学习任务状态消息。
