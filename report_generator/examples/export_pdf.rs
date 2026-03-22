@@ -81,9 +81,15 @@ fn render_spectrum_chart(path: &PathBuf) -> Result<(), Box<dyn std::error::Error
 		.x_label_area_size(40)
 		.y_label_area_size(50)
 		.build_cartesian_2d(0.0f32..128.0f32, 0.0f32..max_y * 1.1)?;
-	chart.configure_mesh().x_desc("Frequency (Hz)").y_desc("Power").draw()?;
+	chart
+		.configure_mesh()
+		.x_desc("Frequency (Hz)")
+		.y_desc("Power")
+		.draw()?;
 	chart.draw_series(LineSeries::new(
-		spectrum.into_iter().map(|point| (point.frequency, point.value)),
+		spectrum
+			.into_iter()
+			.map(|point| (point.frequency, point.value)),
 		&BLUE,
 	))?;
 	root.present()?;

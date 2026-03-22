@@ -20,4 +20,5 @@ pub enum LanguageKey {
 	MedicalImage,
 	VideoPlayer,
 	AudioPlayer,
+	Screenshot,
 }

@@ -4,6 +4,7 @@ use crate::homepage::common::{ChangeFunctionMessage, Functions};
 use crate::homepage::medical_image::plugin::MedicalImagePlugin;
 use crate::homepage::playback_plot::plugin::PlaybackPlotPlugin;
 use crate::homepage::realtime_plot::plugin::RealtimePlotPlugin;
+use crate::homepage::screenshot::plugin::ScreenshotPlugin;
 use crate::homepage::setting::plugin::SettingPlugin;
 use crate::homepage::video_player::plugin::VideoPlayerPlugin;
 use bevy::prelude::*;
@@ -30,6 +31,7 @@ impl Plugin for HomepagePlugin {
 		app.add_plugins(MedicalImagePlugin);
 		app.add_plugins(VideoPlayerPlugin);
 		app.add_plugins(AudioPlayerPlugin);
+		app.add_plugins(ScreenshotPlugin);
 		app.add_plugins(SettingPlugin);
 		// 注册systems
 		app.add_systems(Update, change_function);

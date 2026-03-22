@@ -1,8 +1,8 @@
 use std::{fs, path::PathBuf};
 
 use plotters::prelude::*;
-use report_generator::{export_docx, ReportBlock, ReportDocument, ReportImage, ReportSection};
-use signal_processing::{compute_power_spectrum, generate_composite_signal, CompositeComponent};
+use report_generator::{ReportBlock, ReportDocument, ReportImage, ReportSection, export_docx};
+use signal_processing::{CompositeComponent, compute_power_spectrum, generate_composite_signal};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let output_dir = prepare_output_directory()?;

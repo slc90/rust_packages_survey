@@ -1,9 +1,8 @@
 use std::{fs, path::Path};
 
 use printpdf::{
-	BuiltinFont, Mm, Op, PdfDocument, PdfFontHandle, PdfPage, PdfSaveOptions, Point, Pt,
-	RawImage, TextItem,
-	XObjectTransform,
+	BuiltinFont, Mm, Op, PdfDocument, PdfFontHandle, PdfPage, PdfSaveOptions, Point, Pt, RawImage,
+	TextItem, XObjectTransform,
 };
 
 use crate::{
@@ -152,9 +151,7 @@ fn write_text_line(
 
 fn validate_document(document: &ReportDocument) -> Result<(), ReportError> {
 	if document.title.trim().is_empty() {
-		return Err(ReportError::InvalidDocument(
-			"报告标题不能为空".to_string(),
-		));
+		return Err(ReportError::InvalidDocument("报告标题不能为空".to_string()));
 	}
 	Ok(())
 }

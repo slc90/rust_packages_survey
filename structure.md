@@ -175,3 +175,14 @@ rust_packages_survey/
 > - add `report_generator/` crate for Word and PDF export
 > - add `report_generator/examples/` for minimal DOCX and PDF report generation
 > - report export uses `docx-rs` for `.docx`, `printpdf` for `.pdf`, and reuses chart PNG files as embedded images
+>
+> 2026-03-22 Screenshot Update
+>
+> - add `screenshot/` crate for screenshot output directory management, PNG saving and region cropping
+> - add `ui/src/homepage/screenshot/` for screenshot test page, four capture buttons and two validation regions
+> - homepage `Functions`, menu bar and `i18n` now include the screenshot test entry
+>
+> 2026-03-22 Screenshot Phase 3 Update
+>
+> - `screenshot/` now includes Win32 current-display capture support for the monitor containing the main window
+> - screenshot test page `程序所在桌面截图` button now captures and saves the current display to `screenshots/`

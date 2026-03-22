@@ -47,9 +47,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.x_label_area_size(30)
 		.y_label_area_size(50)
 		.build_cartesian_2d(0.0f32..4.0f32, -1.8f32..1.8f32)?;
-	top_chart.configure_mesh().x_desc("Time (s)").y_desc("Amplitude").draw()?;
+	top_chart
+		.configure_mesh()
+		.x_desc("Time (s)")
+		.y_desc("Amplitude")
+		.draw()?;
 	top_chart.draw_series(LineSeries::new(
-		time_axis.iter().copied().zip(signal.samples.iter().copied()),
+		time_axis
+			.iter()
+			.copied()
+			.zip(signal.samples.iter().copied()),
 		&BLUE,
 	))?;
 

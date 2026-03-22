@@ -7087,6 +7087,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "screenshot"
+version = "0.1.1"
+dependencies = [
+ "bevy",
+ "image 0.25.9",
+ "windows 0.58.0",
+]
+
+[[package]]
 name = "sctk-adwaita"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8145,10 +8154,13 @@ dependencies = [
  "config",
  "edf_io",
  "i18n",
+ "image 0.25.9",
  "media_player",
  "medical_image",
  "rand 0.9.2",
+ "raw-window-handle",
  "rfd",
+ "screenshot",
 ]
 
 [[package]]

@@ -14,5 +14,8 @@ edf_io = { path = "../edf_io" }
 medical_image = { path = "../medical_image" }
 media_player = { path = "../media_player" }
 audio_player = { path = "../audio_player" }
+screenshot = { path = "../screenshot" }
 rand = "0.9"
+raw-window-handle = "0.6"
 rfd = "0.15.4"
+image = "0.25"

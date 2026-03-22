@@ -46,8 +46,16 @@ pub fn apply_iir(
 	let mut output = vec![0.0; signal.samples.len()];
 	for index in 0..signal.samples.len() {
 		let x0 = signal.samples[index];
-		let x1 = if index >= 1 { signal.samples[index - 1] } else { 0.0 };
-		let x2 = if index >= 2 { signal.samples[index - 2] } else { 0.0 };
+		let x1 = if index >= 1 {
+			signal.samples[index - 1]
+		} else {
+			0.0
+		};
+		let x2 = if index >= 2 {
+			signal.samples[index - 2]
+		} else {
+			0.0
+		};
 		let y1 = if index >= 1 { output[index - 1] } else { 0.0 };
 		let y2 = if index >= 2 { output[index - 2] } else { 0.0 };
 

@@ -47,8 +47,7 @@ pub fn generate_composite_signal(
 		let time = index as f32 / sample_rate;
 		let value = components.iter().fold(0.0, |accumulator, component| {
 			accumulator
-				+ component.amplitude
-					* (TAU * component.frequency * time + component.phase).sin()
+				+ component.amplitude * (TAU * component.frequency * time + component.phase).sin()
 		});
 		samples.push(value);
 	}

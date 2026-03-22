@@ -1,6 +1,9 @@
 use rustfft::{FftPlanner, num_complex::Complex32};
 
-use crate::{error::SignalProcessError, types::{FftOutput, SignalBuffer}};
+use crate::{
+	error::SignalProcessError,
+	types::{FftOutput, SignalBuffer},
+};
 
 /// 计算实数序列的 FFT。
 pub fn compute_fft(signal: &SignalBuffer) -> Result<FftOutput, SignalProcessError> {

@@ -56,7 +56,8 @@ pub fn export_docx(document: &ReportDocument, path: &Path) -> Result<(), ReportE
 					docx = docx.add_paragraph(Paragraph::new().add_run(Run::new().add_image(pic)));
 					if let Some(caption) = &image.caption {
 						docx = docx.add_paragraph(
-							Paragraph::new().add_run(Run::new().add_text(caption).italic().size(20)),
+							Paragraph::new()
+								.add_run(Run::new().add_text(caption).italic().size(20)),
 						);
 					}
 				}
@@ -72,9 +73,7 @@ pub fn export_docx(document: &ReportDocument, path: &Path) -> Result<(), ReportE
 
 fn validate_document(document: &ReportDocument) -> Result<(), ReportError> {
 	if document.title.trim().is_empty() {
-		return Err(ReportError::InvalidDocument(
-			"报告标题不能为空".to_string(),
-		));
+		return Err(ReportError::InvalidDocument("报告标题不能为空".to_string()));
 	}
 	Ok(())
 }

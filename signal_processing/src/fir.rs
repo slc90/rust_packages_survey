@@ -16,8 +16,7 @@ pub fn design_fir(config: &FirDesignConfig) -> Result<Vec<f32>, SignalProcessErr
 
 	for tap_index in 0..config.tap_count {
 		let n = tap_index as f32 - center;
-		let window =
-			0.54 - 0.46 * (2.0 * PI * tap_index as f32 / last_index.max(1) as f32).cos();
+		let window = 0.54 - 0.46 * (2.0 * PI * tap_index as f32 / last_index.max(1) as f32).cos();
 
 		let ideal = match config.filter_kind {
 			FilterKind::LowPass => low_pass_kernel(cutoff[0], n),

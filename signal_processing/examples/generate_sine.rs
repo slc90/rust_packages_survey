@@ -29,7 +29,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.y_label_area_size(50)
 		.build_cartesian_2d(0.0f32..2.0f32, -1.2f32..1.2f32)?;
 
-	chart.configure_mesh().x_desc("Time (s)").y_desc("Amplitude").draw()?;
+	chart
+		.configure_mesh()
+		.x_desc("Time (s)")
+		.y_desc("Amplitude")
+		.draw()?;
 	chart.draw_series(LineSeries::new(
 		time_axis.into_iter().zip(signal.samples.iter().copied()),
 		&BLUE,

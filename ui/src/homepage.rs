@@ -5,5 +5,6 @@ pub mod medical_image;
 pub mod playback_plot;
 pub mod plugin;
 pub mod realtime_plot;
+pub mod screenshot;
 pub mod setting;
 pub mod video_player;

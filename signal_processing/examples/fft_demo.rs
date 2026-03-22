@@ -1,9 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use plotters::prelude::*;
-use signal_processing::{
-	CompositeComponent, compute_power_spectrum, generate_composite_signal,
-};
+use signal_processing::{CompositeComponent, compute_power_spectrum, generate_composite_signal};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let signal = generate_composite_signal(
@@ -42,9 +40,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.y_label_area_size(50)
 		.build_cartesian_2d(0.0f32..128.0f32, 0.0f32..max_y * 1.1)?;
 
-	chart.configure_mesh().x_desc("Frequency (Hz)").y_desc("Power").draw()?;
+	chart
+		.configure_mesh()
+		.x_desc("Frequency (Hz)")
+		.y_desc("Power")
+		.draw()?;
 	chart.draw_series(LineSeries::new(
-		spectrum.into_iter().map(|point| (point.frequency, point.value)),
+		spectrum
+			.into_iter()
+			.map(|point| (point.frequency, point.value)),
 		&RED,
 	))?;
 	root.present()?;

@@ -41,16 +41,7 @@ cargo build --workspace
 ## 架构
 
 ### Workspace 结构
-- `entry/`: 程序入口点
-- `ui/`: UI 组件（Bevy 插件），包含：
-  - `homepage/`: 主页功能模块（About、Setting、RealtimePlot）
-  - `title_bar/`: 自定义标题栏
-  - `menu_bar/`: 菜单栏
-- `config/`: 配置管理（读取/写入 JSON 配置）
-- `i18n/`: 国际化支持
-- `logger/`: 日志库
-- `embedded_assets/`: 嵌入式资源（字体、图标）
-- `utils/`: 工具库
+见 `structure.md`
 
 ### 核心模式
 - 使用 Bevy 的 ECS（Entity Component System）架构
@@ -85,3 +76,8 @@ cargo build --workspace
 3. 根据方案完成后记得修改 `docs/requirements.md` 中对应部分
 4. 提交前不能跳过hook
 5. git message用中文，要写清楚功能和修复的问题
+6. 方案写到`docs/`下
+7. 所有函数必须有注释说明，但是不要写doctest
+8. struct中各个属性中间必须固定空一行，struct和属性也必须有注释说明
+9. 算法型代码必须有注释说明原理，有论文支撑的话需要注明引用的论文名称和doi
+10. trait接口必须有注释说明

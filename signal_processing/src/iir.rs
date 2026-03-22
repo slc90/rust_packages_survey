@@ -58,10 +58,7 @@ pub fn design_iir(config: &IirDesignConfig) -> Result<IirCoefficients, SignalPro
 	}
 }
 
-fn normalize_coefficients(
-	b: [f32; 3],
-	a: [f32; 3],
-) -> Result<IirCoefficients, SignalProcessError> {
+fn normalize_coefficients(b: [f32; 3], a: [f32; 3]) -> Result<IirCoefficients, SignalProcessError> {
 	if a[0] == 0.0 {
 		return Err(SignalProcessError::InvalidArgument(
 			"IIR 系数归一化失败".to_string(),

@@ -1,0 +1,5 @@
+pub const SCREENSHOT_RENDER_LAYER: usize = 1;
+pub const RENDER_TARGET_WIDTH: u32 = 1280;
+pub const RENDER_TARGET_HEIGHT: u32 = 720;
+pub const RENDER_PREVIEW_WIDTH: f32 = 640.0;
+pub const RENDER_PREVIEW_HEIGHT: f32 = 360.0;
