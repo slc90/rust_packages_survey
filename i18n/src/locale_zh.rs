@@ -15,5 +15,6 @@ pub fn lookup(language_key: LanguageKey) -> &'static str {
 		LanguageKey::AudioPlayer => "播放音频",
 		LanguageKey::Screenshot => "截图测试",
 		LanguageKey::DeepLearning => "深度学习",
+		LanguageKey::Paradigm => "范式",
 	}
 }

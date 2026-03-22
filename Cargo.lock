@@ -8998,6 +8998,7 @@ dependencies = [
  "config",
  "deep_learning",
  "edf_io",
+ "embedded_assets",
  "futures-lite",
  "i18n",
  "image 0.25.9",

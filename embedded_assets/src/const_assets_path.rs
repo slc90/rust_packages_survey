@@ -9,3 +9,4 @@ embed_with_const!(LOGO, "assets/logo.png");
 embed_with_const!(MINIMIZE_ICON, "assets/minimize.png");
 embed_with_const!(MAXIMIZE_ICON, "assets/maximize.png");
 embed_with_const!(CLOSE_ICON, "assets/close.png");
+embed_with_const!(PARADIGM_DEFAULT_GIF, "assets/paradigm/default.gif");

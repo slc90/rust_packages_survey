@@ -210,6 +210,20 @@ fn spawn_function_menu(
 						TextColor(Color::BLACK),
 					)],
 				),
+				(
+					FunctionMenuItemBundle::default(),
+					observe(
+						|_activated: On<Activate>,
+						 mut writer: MessageWriter<ChangeFunctionMessage>| {
+							debug!("点击范式按钮");
+							writer.write(ChangeFunctionMessage(Functions::Paradigm));
+						}
+					),
+					children![(
+						Text::new(language_manager.lookup(LanguageKey::Paradigm)),
+						TextColor(Color::BLACK),
+					)],
+				),
 			],
 		))
 		.id();

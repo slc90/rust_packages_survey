@@ -1,9 +1,6 @@
 # 目录结构
 ```
 rust_packages_survey/
-├── assets/                                 # 运行时资源目录
-│   └── shaders/
-│       └── medical_volume.wgsl             # 医学影像体渲染 MIP shader
 ├── .cargo/                                 # Cargo构建配置
 │   └── config.toml                         # 链接器配置
 ├── .zed/                                   # Zed编辑器配置
@@ -233,3 +230,19 @@ rust_packages_survey/
 >
 > - `logger/src/lib.rs` now resolves `logs/` from the workspace root before creating rolling log files
 > - launching `entry/src/main.rs` from editor working directories such as `entry/` no longer creates `entry/logs/`
+>
+> 2026-03-22 Paradigm Plan Update
+>
+> - add `docs/范式设计方案.md` for the paradigm module plan
+> - `docs/requirements.md` paradigm section now includes the design document entry
+>
+> 2026-03-22 Paradigm Initial Implementation
+>
+> - add `embedded_assets/assets/paradigm/default.gif` as the default animated GIF preview asset for the paradigm page
+> - add `ui/src/homepage/paradigm/` for the paradigm test page, animated GIF preview and monitor-targeted P300 playback
+> - homepage `Functions`, menu bar and `i18n` now include the paradigm entry
+>
+> 2026-03-22 Embedded Asset Consolidation
+>
+> - move the paradigm default GIF into `embedded_assets/assets/paradigm/default.gif`
+> - keep `medical_volume.wgsl` only under `embedded_assets/assets/shaders/` and remove the duplicate root-level asset copy

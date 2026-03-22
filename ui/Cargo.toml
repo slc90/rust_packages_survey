@@ -16,6 +16,7 @@ media_player = { path = "../media_player" }
 audio_player = { path = "../audio_player" }
 screenshot = { path = "../screenshot" }
 deep_learning = { path = "../deep_learning" }
+embedded_assets = { path = "../embedded_assets" }
 rand = "0.9"
 raw-window-handle = "0.6"
 rfd = "0.15.4"

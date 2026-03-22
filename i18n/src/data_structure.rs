@@ -22,4 +22,5 @@ pub enum LanguageKey {
 	AudioPlayer,
 	Screenshot,
 	DeepLearning,
+	Paradigm,
 }

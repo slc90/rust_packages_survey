@@ -26,6 +26,8 @@ pub enum Functions {
 	Screenshot,
 
 	DeepLearning,
+
+	Paradigm,
 }
 
 // ============================================================================
