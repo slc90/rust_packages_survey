@@ -1,66 +1,62 @@
-﻿<#
-.SYNOPSIS
-整理 Whisper Base 模型目录到安装包 staging 区。
-#>
 param(
-	# 工作区根目录，默认自动回退到当前脚本上两级目录。
-	[string]$WorkspaceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-
-	# Whisper Base 模型根目录，未传入时使用工作区默认位置。
-	[string]$ModelRoot = "",
-
-	# staging 输出目录，未传入时使用 installer\staging。
+	[string]$WorkspaceRoot = "",
 	[string]$StageRoot = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# 统一计算 staging 根目录。
-function Get-NormalizedStageRoot {
+if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) {
+	$WorkspaceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+} else {
+	$WorkspaceRoot = (Resolve-Path $WorkspaceRoot).Path
+}
+
+if ([string]::IsNullOrWhiteSpace($StageRoot)) {
+	$StageRoot = Join-Path $WorkspaceRoot "installer\staging"
+}
+
+$baseModelRoot = Join-Path $WorkspaceRoot "deepl_models\whisper_base"
+$largeV3ModelRoot = Join-Path $WorkspaceRoot "deepl_models\whisper\whisper-large-v3"
+if (-not (Test-Path $largeV3ModelRoot)) {
+	$largeV3ModelRoot = Join-Path $WorkspaceRoot "deepl_models\whisper"
+}
+
+$baseManifestPath = Join-Path $WorkspaceRoot "installer\manifests\whisper_base_required_files.txt"
+$largeV3ManifestPath = Join-Path $WorkspaceRoot "installer\manifests\whisper_large_v3_required_files.txt"
+$baseTargetRoot = Join-Path $StageRoot "app\deepl_models\whisper_base"
+$largeV3TargetRoot = Join-Path $StageRoot "app\deepl_models\whisper\whisper-large-v3"
+
+function Copy-RequiredFiles {
 	param(
-		[string]$ResolvedWorkspaceRoot,
-		[string]$RequestedStageRoot
+		[string]$SourceRoot,
+		[string]$ManifestPath,
+		[string]$TargetRoot,
+		[string]$ModelLabel
 	)
 
-	if ([string]::IsNullOrWhiteSpace($RequestedStageRoot)) {
-		return (Join-Path $ResolvedWorkspaceRoot "installer\staging")
+	if (-not (Test-Path $SourceRoot)) {
+		throw "缺少 $ModelLabel 模型目录: $SourceRoot"
 	}
 
-	return $RequestedStageRoot
-}
-
-# 解析工作目录、模型目录和输出目录。
-$resolvedWorkspaceRoot = (Resolve-Path $WorkspaceRoot).Path
-$resolvedStageRoot = Get-NormalizedStageRoot -ResolvedWorkspaceRoot $resolvedWorkspaceRoot -RequestedStageRoot $StageRoot
-$resolvedModelRoot = if ([string]::IsNullOrWhiteSpace($ModelRoot)) {
-	Join-Path $resolvedWorkspaceRoot "deepl_models\whisper_base"
-} else {
-	(Resolve-Path $ModelRoot).Path
-}
-$manifestPath = Join-Path $resolvedWorkspaceRoot "installer\manifests\whisper_base_required_files.txt"
-$targetRoot = Join-Path $resolvedStageRoot "app\deepl_models\whisper_base"
-
-if (-not (Test-Path $resolvedModelRoot)) {
-	throw "缺少 Whisper Base 模型目录: $resolvedModelRoot"
-}
-
-if (Test-Path $targetRoot) {
-	Remove-Item -Path $targetRoot -Recurse -Force
-}
-
-# 只按清单复制 Whisper Base 的必需文件，避免把无关文件一起打包。
-New-Item -ItemType Directory -Path $targetRoot -Force | Out-Null
-
-$requiredFiles = Get-Content $manifestPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-foreach ($fileName in $requiredFiles) {
-	$sourcePath = Join-Path $resolvedModelRoot $fileName
-	if (-not (Test-Path $sourcePath)) {
-		throw "缺少 Whisper Base 模型文件: $sourcePath"
+	if (Test-Path $TargetRoot) {
+		Remove-Item -Path $TargetRoot -Recurse -Force
 	}
 
-	Copy-Item -Path $sourcePath -Destination (Join-Path $targetRoot $fileName) -Force
+	New-Item -ItemType Directory -Path $TargetRoot -Force | Out-Null
+
+	$requiredFiles = Get-Content $ManifestPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+	foreach ($fileName in $requiredFiles) {
+		$sourcePath = Join-Path $SourceRoot $fileName
+		if (-not (Test-Path $sourcePath)) {
+			throw "缺少 $ModelLabel 模型文件: $sourcePath"
+		}
+
+		Copy-Item -Path $sourcePath -Destination (Join-Path $TargetRoot $fileName) -Force
+	}
+
+	Write-Host "已整理 $ModelLabel 模型到 $TargetRoot"
 }
 
-# 输出整理完成的结果路径。
-Write-Host "已整理 Whisper Base 模型到 $targetRoot"
+Copy-RequiredFiles -SourceRoot $baseModelRoot -ManifestPath $baseManifestPath -TargetRoot $baseTargetRoot -ModelLabel "Whisper Base"
+Copy-RequiredFiles -SourceRoot $largeV3ModelRoot -ManifestPath $largeV3ManifestPath -TargetRoot $largeV3TargetRoot -ModelLabel "Whisper Large V3"

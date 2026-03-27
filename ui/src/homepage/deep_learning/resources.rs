@@ -13,7 +13,7 @@ use deep_learning::{
 	task::DlTaskId,
 	translation::{TranslationRequest, TranslationSourceLanguage},
 	tts::{TtsLanguage, TtsRequest},
-	whisper::{WhisperLanguageHint, WhisperRequest},
+	whisper::{WhisperLanguageHint, WhisperModelKind, WhisperRequest},
 };
 
 /// 深度学习测试页状态。
@@ -39,6 +39,9 @@ pub struct DeepLearningPageState {
 
 	/// Whisper 语言提示。
 	pub whisper_language_hint: WhisperLanguageHint,
+
+	/// Whisper 模型类型。
+	pub whisper_model: WhisperModelKind,
 
 	/// Whisper 是否输出时间戳。
 	pub whisper_with_timestamps: bool,
@@ -103,6 +106,7 @@ impl DeepLearningPageState {
 			next_task_id: 1,
 			whisper_input_file: None,
 			whisper_language_hint: WhisperLanguageHint::Auto,
+			whisper_model: WhisperModelKind::Base,
 			whisper_with_timestamps: true,
 			whisper_progress: 0.0,
 			whisper_status_text: "Whisper 进度：等待任务".to_string(),
@@ -135,6 +139,7 @@ impl DeepLearningPageState {
 		let input_path = self.whisper_input_file.clone()?;
 		Some(WhisperRequest {
 			input_path,
+			model: self.whisper_model,
 			language_hint: self.whisper_language_hint,
 			with_timestamps: self.whisper_with_timestamps,
 		})

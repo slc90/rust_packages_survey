@@ -56,11 +56,34 @@ impl WhisperLanguageHint {
 	}
 }
 
+/// Whisper 模型类型。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum WhisperModelKind {
+	/// 兼容现有轻量模型。
+	Base,
+
+	/// 更高质量的 large-v3 模型。
+	LargeV3,
+}
+
+impl WhisperModelKind {
+	/// 获取模型显示名称。
+	pub fn as_label(self) -> &'static str {
+		match self {
+			Self::Base => "whisper-base",
+			Self::LargeV3 => "whisper-large-v3",
+		}
+	}
+}
+
 /// Whisper 请求参数。
 #[derive(Debug, Clone)]
 pub struct WhisperRequest {
 	/// 输入音频或视频文件路径。
 	pub input_path: PathBuf,
+
+	/// Whisper 模型类型。
+	pub model: WhisperModelKind,
 
 	/// 语言提示。
 	pub language_hint: WhisperLanguageHint,
@@ -75,6 +98,16 @@ pub fn whisper_base_descriptor() -> ModelDescriptor {
 		id: "openai/whisper-base",
 		capability: ModelCapability::Whisper,
 		model_subdir: "whisper-base",
+		weights_relative_path: "model.safetensors",
+	}
+}
+
+/// Whisper Large V3 模型描述。
+pub fn whisper_large_v3_descriptor() -> ModelDescriptor {
+	ModelDescriptor {
+		id: "openai/whisper-large-v3",
+		capability: ModelCapability::Whisper,
+		model_subdir: "whisper-large-v3",
 		weights_relative_path: "model.safetensors",
 	}
 }
@@ -132,6 +165,16 @@ struct WhisperSegment {
 	text: String,
 }
 
+/// Whisper 时间戳 token 范围。
+#[derive(Debug, Clone, Copy)]
+struct WhisperTimestampRange {
+	/// 第一个时间戳 token id。
+	begin_token: u32,
+
+	/// 最后一个时间戳 token id。
+	end_token: u32,
+}
+
 /// Whisper 最小 tokenizer。
 #[derive(Debug, Clone)]
 struct WhisperTokenizer {
@@ -143,6 +186,9 @@ struct WhisperTokenizer {
 
 	/// GPT-2 字节映射的反向查找表。
 	byte_decoder: HashMap<char, u8>,
+
+	/// 时间戳 token 范围。
+	timestamp_range: WhisperTimestampRange,
 }
 
 /// Whisper 最小解码器。
@@ -170,13 +216,18 @@ struct WhisperDecoder {
 
 	/// 语言 token。
 	language_token: Option<u32>,
+
+	/// 是否启用原生时间戳解码。
+	with_timestamps: bool,
 }
 
-/// 校验 Whisper 模型目录和核心文件。
-pub fn ensure_whisper_model_ready() -> Result<WhisperModelPaths, DeepLearningError> {
-	let descriptor = whisper_base_descriptor();
+/// 校验指定 Whisper 模型目录和核心文件。
+pub fn ensure_whisper_model_ready(
+	model_kind: WhisperModelKind,
+) -> Result<WhisperModelPaths, DeepLearningError> {
+	let descriptor = whisper_descriptor(model_kind);
 
-	for directory in whisper_model_directory_candidates(&descriptor) {
+	for directory in whisper_model_directory_candidates(model_kind, &descriptor) {
 		if !directory.exists() {
 			continue;
 		}
@@ -201,7 +252,7 @@ pub fn ensure_whisper_model_ready() -> Result<WhisperModelPaths, DeepLearningErr
 	}
 
 	Err(DeepLearningError::ModelDirectoryMissing {
-		path: model_root_dir().join("whisper_base"),
+		path: missing_model_directory_hint(model_kind, &descriptor),
 	})
 }
 
@@ -223,8 +274,9 @@ pub fn save_whisper_request_snapshot(
 ) -> Result<PathBuf, DeepLearningError> {
 	let output_path = build_whisper_request_snapshot_path();
 	let content = format!(
-		"Whisper 任务快照\ninput={}\nlanguage_hint={}\nwith_timestamps={}\n",
+		"Whisper 任务快照\ninput={}\nmodel={}\nlanguage_hint={}\nwith_timestamps={}\n",
 		request.input_path.display(),
+		request.model.as_label(),
 		request.language_hint.as_label(),
 		request.with_timestamps
 	);
@@ -244,13 +296,13 @@ pub fn build_whisper_output_path() -> PathBuf {
 		.join(format!("whisper_result_{timestamp}.txt"))
 }
 
-/// 执行 Whisper Base 实际推理。
+/// 执行 Whisper 实际推理。
 pub fn run_whisper_inference(
 	request: &WhisperRequest,
 	runtime: &CandleRuntime,
 ) -> Result<InferenceOutput, DeepLearningError> {
 	save_whisper_request_snapshot(request)?;
-	let model_paths = ensure_whisper_model_ready()?;
+	let model_paths = ensure_whisper_model_ready(request.model)?;
 	let config = load_whisper_config(&model_paths.config)?;
 	let tokenizer = load_whisper_tokenizer(&model_paths)?;
 	let mel_filters = load_mel_filters(config.num_mel_bins)?;
@@ -263,8 +315,13 @@ pub fn run_whisper_inference(
 		.and_then(|token_id| tokenizer.id_to_token(token_id))
 		.map(|token| token.trim_matches(['<', '|', '>']).to_string())
 		.unwrap_or_else(|| "unknown".to_string());
-	let mut decoder =
-		WhisperDecoder::new(model, tokenizer, runtime.device().clone(), language_token)?;
+	let mut decoder = WhisperDecoder::new(
+		model,
+		tokenizer,
+		runtime.device().clone(),
+		language_token,
+		request.with_timestamps,
+	)?;
 	let segments = decoder.run(&mel)?;
 	let transcript = format_segments(&segments, request.with_timestamps);
 	let output_path = build_whisper_output_path();
@@ -280,7 +337,11 @@ pub fn run_whisper_inference(
 	std::fs::write(&output_path, content)?;
 
 	Ok(InferenceOutput {
-		summary: format!("Whisper Base 推理已完成，识别出 {} 个片段", segments.len()),
+		summary: format!(
+			"Whisper {} 推理已完成，识别出 {} 个片段",
+			request.model.as_label(),
+			segments.len()
+		),
 		output_path: Some(output_path),
 	})
 }
@@ -292,6 +353,7 @@ impl WhisperDecoder {
 		tokenizer: WhisperTokenizer,
 		device: Device,
 		language_token: Option<u32>,
+		with_timestamps: bool,
 	) -> Result<Self, DeepLearningError> {
 		let sot_token = token_id(&tokenizer, whisper_modeling::SOT_TOKEN)?;
 		let transcribe_token = token_id(&tokenizer, whisper_modeling::TRANSCRIBE_TOKEN)?;
@@ -307,6 +369,7 @@ impl WhisperDecoder {
 			eot_token,
 			no_timestamps_token,
 			language_token,
+			with_timestamps,
 		})
 	}
 
@@ -323,30 +386,32 @@ impl WhisperDecoder {
 			let mel_segment = mel
 				.narrow(2, seek, segment_size)
 				.map_err(|error| map_candle_error("截取 mel 片段", error))?;
-			let text = self.decode_segment(&mel_segment)?;
+			let mut decoded_segments = self.decode_segment(&mel_segment)?;
 			let start_seconds =
 				(seek * whisper_modeling::HOP_LENGTH) as f64 / whisper_modeling::SAMPLE_RATE as f64;
 			let end_seconds = ((seek + segment_size) * whisper_modeling::HOP_LENGTH) as f64
 				/ whisper_modeling::SAMPLE_RATE as f64;
 			seek += segment_size;
 
-			let clean_text = text.trim().to_string();
-			if clean_text.is_empty() {
-				continue;
+			for segment in &mut decoded_segments {
+				segment.start_seconds += start_seconds;
+				segment.end_seconds += start_seconds;
+				if segment.end_seconds <= segment.start_seconds {
+					segment.end_seconds = end_seconds;
+				}
 			}
-
-			segments.push(WhisperSegment {
-				start_seconds,
-				end_seconds,
-				text: clean_text,
-			});
+			segments.extend(
+				decoded_segments
+					.into_iter()
+					.filter(|segment| !segment.text.trim().is_empty()),
+			);
 		}
 
 		Ok(segments)
 	}
 
 	/// 对单个 mel 片段执行贪心解码。
-	fn decode_segment(&mut self, mel: &Tensor) -> Result<String, DeepLearningError> {
+	fn decode_segment(&mut self, mel: &Tensor) -> Result<Vec<WhisperSegment>, DeepLearningError> {
 		let audio_features = self
 			.model
 			.encoder
@@ -358,7 +423,10 @@ impl WhisperDecoder {
 			tokens.push(language_token);
 		}
 		tokens.push(self.transcribe_token);
-		tokens.push(self.no_timestamps_token);
+		if !self.with_timestamps {
+			tokens.push(self.no_timestamps_token);
+		}
+		let prompt_len = tokens.len();
 
 		for step in 0..sample_len {
 			let tokens_t = Tensor::new(tokens.as_slice(), &self.device)
@@ -403,11 +471,98 @@ impl WhisperDecoder {
 			tokens.push(next_token);
 		}
 
-		self.tokenizer
-			.decode(&tokens, true)
+		let generated_tokens = &tokens[prompt_len..];
+		if self.with_timestamps {
+			return self.decode_segments_from_timestamp_tokens(generated_tokens);
+		}
+
+		let text = self
+			.tokenizer
+			.decode(generated_tokens, true)
 			.map_err(|error| DeepLearningError::InferenceFailed {
 				message: format!("解码 Whisper token 失败: {error}"),
-			})
+			})?;
+		Ok(vec![WhisperSegment {
+			start_seconds: 0.0,
+			end_seconds: 0.0,
+			text: text.trim().to_string(),
+		}])
+	}
+
+	/// 将包含时间戳 token 的生成序列拆分为原生时间轴片段。
+	fn decode_segments_from_timestamp_tokens(
+		&self,
+		generated_tokens: &[u32],
+	) -> Result<Vec<WhisperSegment>, DeepLearningError> {
+		let mut segments = Vec::new();
+		let mut current_start_seconds = None;
+		let mut text_tokens = Vec::new();
+
+		for token_id in generated_tokens {
+			if let Some(timestamp_seconds) = self.tokenizer.timestamp_seconds(*token_id) {
+				let clean_text = self
+					.tokenizer
+					.decode(&text_tokens, true)
+					.map_err(|error| DeepLearningError::InferenceFailed {
+						message: format!("解码 Whisper 时间戳片段失败: {error}"),
+					})?
+					.trim()
+					.to_string();
+				if let Some(start_seconds) = current_start_seconds
+					&& !clean_text.is_empty()
+					&& timestamp_seconds > start_seconds
+				{
+					segments.push(WhisperSegment {
+						start_seconds,
+						end_seconds: timestamp_seconds,
+						text: clean_text,
+					});
+				}
+				current_start_seconds = Some(timestamp_seconds);
+				text_tokens.clear();
+				continue;
+			}
+
+			text_tokens.push(*token_id);
+		}
+
+		if !text_tokens.is_empty() {
+			let clean_text = self
+				.tokenizer
+				.decode(&text_tokens, true)
+				.map_err(|error| DeepLearningError::InferenceFailed {
+					message: format!("解码 Whisper 尾部片段失败: {error}"),
+				})?
+				.trim()
+				.to_string();
+			if !clean_text.is_empty() {
+				segments.push(WhisperSegment {
+					start_seconds: current_start_seconds.unwrap_or(0.0),
+					end_seconds: current_start_seconds.unwrap_or(0.0),
+					text: clean_text,
+				});
+			}
+		}
+
+		if segments.is_empty() {
+			let fallback_text = self
+				.tokenizer
+				.decode(generated_tokens, true)
+				.map_err(|error| DeepLearningError::InferenceFailed {
+					message: format!("解码 Whisper token 失败: {error}"),
+				})?
+				.trim()
+				.to_string();
+			if !fallback_text.is_empty() {
+				segments.push(WhisperSegment {
+					start_seconds: 0.0,
+					end_seconds: 0.0,
+					text: fallback_text,
+				});
+			}
+		}
+
+		Ok(segments)
 	}
 }
 
@@ -689,11 +844,13 @@ impl WhisperTokenizer {
 		for (token, token_id) in &token_to_id {
 			id_to_token[*token_id as usize] = token.clone();
 		}
+		let timestamp_range = timestamp_token_range(&token_to_id)?;
 
 		Ok(Self {
 			token_to_id,
 			id_to_token,
 			byte_decoder: gpt2_byte_decoder(),
+			timestamp_range,
 		})
 	}
 
@@ -705,6 +862,16 @@ impl WhisperTokenizer {
 	/// 根据 id 查找 token 文本。
 	fn id_to_token(&self, token_id: u32) -> Option<&str> {
 		self.id_to_token.get(token_id as usize).map(String::as_str)
+	}
+
+	/// 判断 token 是否为时间戳 token，并返回相对秒数。
+	fn timestamp_seconds(&self, token_id: u32) -> Option<f64> {
+		if token_id < self.timestamp_range.begin_token || token_id > self.timestamp_range.end_token
+		{
+			return None;
+		}
+
+		Some(f64::from(token_id - self.timestamp_range.begin_token) * 0.02)
 	}
 
 	/// 将 Whisper 生成的 token 序列解码为文本。
@@ -776,14 +943,69 @@ fn gpt2_byte_decoder() -> HashMap<char, u8> {
 		.collect()
 }
 
+/// 从 token 表中推导 Whisper 时间戳 token 范围。
+fn timestamp_token_range(
+	token_to_id: &HashMap<String, u32>,
+) -> Result<WhisperTimestampRange, DeepLearningError> {
+	let begin_token =
+		token_to_id
+			.get("<|0.00|>")
+			.copied()
+			.ok_or_else(|| DeepLearningError::ModelLoadFailed {
+				message: "缺少 Whisper 起始时间戳 token <|0.00|>".to_string(),
+			})?;
+	let end_token = token_to_id.get("<|30.00|>").copied().ok_or_else(|| {
+		DeepLearningError::ModelLoadFailed {
+			message: "缺少 Whisper 结束时间戳 token <|30.00|>".to_string(),
+		}
+	})?;
+	Ok(WhisperTimestampRange {
+		begin_token,
+		end_token,
+	})
+}
+
 /// 获取 Whisper 模型目录候选列表。
-fn whisper_model_directory_candidates(descriptor: &ModelDescriptor) -> Vec<PathBuf> {
+fn whisper_model_directory_candidates(
+	model_kind: WhisperModelKind,
+	descriptor: &ModelDescriptor,
+) -> Vec<PathBuf> {
 	let model_root = model_root_dir();
-	vec![
-		model_root.join("whisper_base"),
-		model_root.join("whisper-base"),
-		model_root.join("whisper").join(descriptor.model_subdir),
-	]
+	match model_kind {
+		WhisperModelKind::Base => vec![
+			model_root.join("whisper_base"),
+			model_root.join("whisper-base"),
+			model_root.join("whisper").join("whisper-base"),
+			model_root.join("whisper").join(descriptor.model_subdir),
+		],
+		WhisperModelKind::LargeV3 => vec![
+			model_root.join("whisper").join("whisper-large-v3"),
+			model_root.join("whisper").join(descriptor.model_subdir),
+			model_root.join("whisper"),
+			model_root.join("whisper_large_v3"),
+			model_root.join("whisper-large-v3"),
+		],
+	}
+}
+
+/// 根据模型类型返回 descriptor。
+fn whisper_descriptor(model_kind: WhisperModelKind) -> ModelDescriptor {
+	match model_kind {
+		WhisperModelKind::Base => whisper_base_descriptor(),
+		WhisperModelKind::LargeV3 => whisper_large_v3_descriptor(),
+	}
+}
+
+/// 返回模型缺失时的目录提示。
+fn missing_model_directory_hint(
+	model_kind: WhisperModelKind,
+	descriptor: &ModelDescriptor,
+) -> PathBuf {
+	let model_root = model_root_dir();
+	match model_kind {
+		WhisperModelKind::Base => model_root.join("whisper_base"),
+		WhisperModelKind::LargeV3 => model_root.join("whisper").join(descriptor.model_subdir),
+	}
 }
 
 /// 校验 Whisper 运行最小所需文件。

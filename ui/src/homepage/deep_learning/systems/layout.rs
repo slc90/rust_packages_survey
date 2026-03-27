@@ -134,6 +134,16 @@ fn spawn_whisper_section(builder: &mut ChildSpawnerCommands, state: &DeepLearnin
 				TextColor(Color::BLACK),
 			));
 			section.spawn((
+				Text::new(
+					"支持 whisper-base 与 whisper-large-v3。开启原生时间轴后，将输出基于 Whisper timestamp token 的片段时间。"
+				),
+				TextFont {
+					font_size: 13.0,
+					..default()
+				},
+				TextColor(Color::srgb(0.24, 0.30, 0.36)),
+			));
+			section.spawn((
 				Node {
 					width: Val::Percent(100.0),
 					column_gap: Val::Px(8.0),
@@ -143,21 +153,25 @@ fn spawn_whisper_section(builder: &mut ChildSpawnerCommands, state: &DeepLearnin
 				children![
 					spawn_action_button(
 						DeepLearningWhisperOpenFileButtonMarker,
-						"Whisper 选择文件"
+						"选择音频"
 					),
 					spawn_action_button(
 						DeepLearningWhisperLanguageCycleButtonMarker,
-						"Whisper 切换语言"
+						"切换语言"
+					),
+					spawn_action_button(
+						DeepLearningWhisperModelCycleButtonMarker,
+						"切换模型"
 					),
 					spawn_action_button(
 						DeepLearningWhisperTimestampToggleButtonMarker,
-						"Whisper 时间戳开关"
+						"切换时间轴"
 					),
-					spawn_action_button(DeepLearningWhisperStartButtonMarker, "Whisper 开始任务"),
+					spawn_action_button(DeepLearningWhisperStartButtonMarker, "开始识别"),
 				],
 			));
 			section.spawn((
-				Text::new("Whisper 文件：未选择"),
+				Text::new("Whisper 输入：未选择音频或视频文件"),
 				TextFont {
 					font_size: 16.0,
 					..default()

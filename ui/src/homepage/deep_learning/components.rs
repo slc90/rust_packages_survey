@@ -32,6 +32,10 @@ pub struct DeepLearningWhisperTimestampToggleButtonMarker;
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperLanguageCycleButtonMarker;
 
+/// Whisper 模型切换按钮标记。
+#[derive(Component, Default, Clone, Copy, Debug)]
+pub struct DeepLearningWhisperModelCycleButtonMarker;
+
 /// Whisper 文件文本标记。
 #[derive(Component, Default, Clone, Copy, Debug)]
 pub struct DeepLearningWhisperFileTextMarker;

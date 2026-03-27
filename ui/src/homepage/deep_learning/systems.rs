@@ -14,7 +14,7 @@ use deep_learning::{
 	},
 	translation::TranslationSourceLanguage,
 	tts::TtsLanguage,
-	whisper::WhisperLanguageHint,
+	whisper::{WhisperLanguageHint, WhisperModelKind},
 };
 
 use crate::{
@@ -44,8 +44,9 @@ use crate::{
 				DeepLearningTtsOpenFileButtonMarker, DeepLearningTtsSpeedCycleButtonMarker,
 				DeepLearningTtsStartButtonMarker, DeepLearningWhisperConfigTextMarker,
 				DeepLearningWhisperFileTextMarker, DeepLearningWhisperLanguageCycleButtonMarker,
-				DeepLearningWhisperOpenFileButtonMarker, DeepLearningWhisperProgressFillMarker,
-				DeepLearningWhisperProgressTextMarker, DeepLearningWhisperStartButtonMarker,
+				DeepLearningWhisperModelCycleButtonMarker, DeepLearningWhisperOpenFileButtonMarker,
+				DeepLearningWhisperProgressFillMarker, DeepLearningWhisperProgressTextMarker,
+				DeepLearningWhisperStartButtonMarker,
 				DeepLearningWhisperTimestampToggleButtonMarker,
 			},
 			resources::{DeepLearningPageState, DeepLearningPendingTasks, PendingInferenceTask},
@@ -62,8 +63,9 @@ mod tasks;
 pub use controls::{
 	handle_smoke_test_click, handle_translation_language_cycle_click,
 	handle_translation_open_file_click, handle_translation_start_click,
-	handle_whisper_language_cycle_click, handle_whisper_open_file_click,
-	handle_whisper_start_click, handle_whisper_timestamp_toggle_click,
+	handle_whisper_language_cycle_click, handle_whisper_model_cycle_click,
+	handle_whisper_open_file_click, handle_whisper_start_click,
+	handle_whisper_timestamp_toggle_click,
 };
 pub use controls_extra::{
 	handle_image_generation_model_cycle_click, handle_image_generation_open_file_click,
@@ -117,9 +119,14 @@ fn spawn_section_card(border: Color, background: Color) -> impl Bundle {
 
 fn whisper_config_text(state: &DeepLearningPageState) -> String {
 	format!(
-		"Whisper 配置：language_hint={} / with_timestamps={}",
+		"Whisper 配置：模型={} / 语言提示={} / 原生时间轴={}",
+		state.whisper_model.as_label(),
 		state.whisper_language_hint.as_label(),
-		state.whisper_with_timestamps
+		if state.whisper_with_timestamps {
+			"开启"
+		} else {
+			"关闭"
+		}
 	)
 }
 
@@ -193,6 +200,13 @@ fn next_whisper_language_hint(current: WhisperLanguageHint) -> WhisperLanguageHi
 		WhisperLanguageHint::Chinese => WhisperLanguageHint::Japanese,
 		WhisperLanguageHint::Japanese => WhisperLanguageHint::English,
 		WhisperLanguageHint::English => WhisperLanguageHint::Auto,
+	}
+}
+
+fn next_whisper_model(current: WhisperModelKind) -> WhisperModelKind {
+	match current {
+		WhisperModelKind::Base => WhisperModelKind::LargeV3,
+		WhisperModelKind::LargeV3 => WhisperModelKind::Base,
 	}
 }
 

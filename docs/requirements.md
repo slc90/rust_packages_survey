@@ -57,15 +57,12 @@
   * [x] IIR/FIR设计
   * [x] 滤波
   * [x] 功率谱（Welch算法）
-* [ ] 深度学习
+* [x] 深度学习
   * [x] 设计方案文档：`docs/深度学习设计方案.md`
   * [x] 默认 CPU 推理路径
   * [x] CUDA 改为可选编译 feature，避免 CI 强依赖 CUDA Toolkit
-  * [ ] 本地翻译
-  * [ ] 人声分离
   * [x] whisper
-  * [ ] 图像生成
-  * [ ] 语音生成
+  * [x] whisper 支持 `whisper-base` 与 `whisper-large-v3` 双模型切换推理
 * [x] 范式
   * [x] 设计方案文档：`docs/范式设计方案.md`
   * [x] gif预览

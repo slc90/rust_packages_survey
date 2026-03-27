@@ -50,7 +50,7 @@ pub fn handle_whisper_open_file_click(
 		state.whisper_input_file = Some(path.clone());
 		update_single_text(
 			&mut text_query,
-			&format!("Whisper 文件：{}", path.display()),
+			&format!("Whisper 输入：{}", path.display()),
 		);
 	}
 }
@@ -73,6 +73,28 @@ pub fn handle_whisper_language_cycle_click(
 		}
 
 		state.whisper_language_hint = next_whisper_language_hint(state.whisper_language_hint);
+		update_single_text(&mut text_query, &whisper_config_text(&state));
+	}
+}
+
+/// 处理 Whisper 模型切换。
+pub fn handle_whisper_model_cycle_click(
+	interaction_query: Query<
+		&Interaction,
+		(
+			Changed<Interaction>,
+			With<DeepLearningWhisperModelCycleButtonMarker>,
+		),
+	>,
+	mut state: ResMut<DeepLearningPageState>,
+	mut text_query: Query<&mut Text, With<DeepLearningWhisperConfigTextMarker>>,
+) {
+	for interaction in &interaction_query {
+		if !matches!(interaction, Interaction::Pressed) {
+			continue;
+		}
+
+		state.whisper_model = next_whisper_model(state.whisper_model);
 		update_single_text(&mut text_query, &whisper_config_text(&state));
 	}
 }

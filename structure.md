@@ -59,11 +59,12 @@ rust_packages_survey/
 │   ├── manifests/                          # 安装资源整理清单
 │   │   ├── cuda_runtime_dlls.txt           # CUDA 运行时 DLL 匹配清单
 │   │   ├── gstreamer_runtime_roots.txt     # GStreamer 运行时目录清单
-│   │   └── whisper_base_required_files.txt # Whisper Base 必需模型文件清单
+│   │   ├── whisper_base_required_files.txt # Whisper Base 必需模型文件清单
+│   │   └── whisper_large_v3_required_files.txt # Whisper Large V3 必需模型文件清单
 │   ├── scripts/                            # 安装包构建脚本
 │   │   ├── build_installer.ps1             # 安装包 staging 和 MSI 构建脚本
 │   │   ├── prepare_cuda_runtime.ps1        # CUDA 运行时整理脚本
-│   │   ├── prepare_models.ps1              # Whisper Base 模型整理脚本
+│   │   ├── prepare_models.ps1              # Whisper 模型整理脚本（Base + Large V3）
 │   │   └── prepare_runtime.ps1             # GStreamer 运行时整理脚本
 │   └── wix/                                # WiX 模板和资源
 │       ├── License.rtf                     # 安装器许可文本占位文件
