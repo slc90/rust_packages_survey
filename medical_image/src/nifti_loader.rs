@@ -157,6 +157,7 @@ mod tests {
 	use crate::volume::VolumeModality;
 	use std::path::PathBuf;
 
+	/// 返回 workspace 根目录，便于拼接测试数据路径。
 	fn workspace_dir() -> PathBuf {
 		PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 			.parent()
@@ -164,8 +165,16 @@ mod tests {
 			.to_path_buf()
 	}
 
+	/// 判断当前是否处于 CI 环境，避免在流水线中依赖未提交的大体积医学影像数据。
+	fn should_skip_data_dependent_nifti_tests() -> bool {
+		std::env::var_os("CI").is_some() || std::env::var_os("GITHUB_ACTIONS").is_some()
+	}
+
 	#[test]
 	fn should_load_ct_nifti_from_data_directory() {
+		if should_skip_data_dependent_nifti_tests() {
+			return;
+		}
 		let path = workspace_dir()
 			.join("data")
 			.join("SubjectUCI29_CT_acpc_f.nii");
@@ -180,6 +189,9 @@ mod tests {
 
 	#[test]
 	fn should_load_mr_nifti_from_data_directory() {
+		if should_skip_data_dependent_nifti_tests() {
+			return;
+		}
 		let path = workspace_dir()
 			.join("data")
 			.join("SubjectUCI29_MR_acpc.nii");
