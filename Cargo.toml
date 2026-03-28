@@ -23,7 +23,7 @@ edition = "2024"
 authors = [""]
 license = ""
 description = "Rust packages survey project"
-version = "0.1.14"
+version = "0.1.15"
 
 [workspace.dependencies]
 rstest = "0.26.1"
