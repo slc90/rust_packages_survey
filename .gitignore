@@ -11,3 +11,6 @@ deep_learning_output/
 /installer/staging/
 /installer/dist/
 /installer/local_paths.ps1
+/installer/release_assets_build/
+/installer/downloaded_assets/
+/gcm-diagnose.log

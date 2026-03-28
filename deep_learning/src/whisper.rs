@@ -1,6 +1,7 @@
 use std::{
 	collections::HashMap,
 	fs::File,
+	io,
 	path::{Path, PathBuf},
 	time::{SystemTime, UNIX_EPOCH},
 };
@@ -12,7 +13,7 @@ use rodio::{Decoder, Source};
 
 use crate::{
 	error::DeepLearningError,
-	model::{ModelCapability, ModelDescriptor, ensure_model_weights_exist, model_root_dir},
+	model::{ModelCapability, ModelDescriptor, local_app_data_root_dir, model_root_dir},
 	output::output_root_dir,
 	runtime::{CandleRuntime, InferenceOutput},
 	whisper_impl::{self as whisper_modeling, Config, audio, model::Whisper},
@@ -232,7 +233,7 @@ pub fn ensure_whisper_model_ready(
 			continue;
 		}
 
-		let paths = WhisperModelPaths {
+		let mut paths = WhisperModelPaths {
 			descriptor: descriptor.clone(),
 			weights: directory.join("model.safetensors"),
 			config: directory.join("config.json"),
@@ -247,6 +248,7 @@ pub fn ensure_whisper_model_ready(
 			directory,
 		};
 
+		paths.weights = resolve_whisper_weights_path(model_kind, &paths.directory)?;
 		ensure_whisper_support_files_exist(&paths)?;
 		return Ok(paths);
 	}
@@ -254,6 +256,87 @@ pub fn ensure_whisper_model_ready(
 	Err(DeepLearningError::ModelDirectoryMissing {
 		path: missing_model_directory_hint(model_kind, &descriptor),
 	})
+}
+
+/// 解析 Whisper 实际可用的权重文件路径。
+fn resolve_whisper_weights_path(
+	model_kind: WhisperModelKind,
+	model_directory: &Path,
+) -> Result<PathBuf, DeepLearningError> {
+	let weights_path = model_directory.join("model.safetensors");
+	if weights_path.exists() {
+		return Ok(weights_path);
+	}
+
+	if model_kind != WhisperModelKind::LargeV3 {
+		return Err(DeepLearningError::ModelFileMissing { path: weights_path });
+	}
+
+	let cache_weights_path = large_v3_cache_weights_path()?;
+	if cache_weights_path.exists() {
+		return Ok(cache_weights_path);
+	}
+
+	assemble_large_v3_weights_from_parts(model_directory, &cache_weights_path)?;
+	Ok(cache_weights_path)
+}
+
+/// 返回 Large V3 组装后的本地缓存权重路径。
+fn large_v3_cache_weights_path() -> Result<PathBuf, DeepLearningError> {
+	let local_root =
+		local_app_data_root_dir().ok_or_else(|| DeepLearningError::ModelLoadFailed {
+			message: "缺少 LOCALAPPDATA，无法缓存 Whisper Large V3 权重".to_string(),
+		})?;
+	Ok(local_root
+		.join("deepl_models")
+		.join("whisper")
+		.join("whisper-large-v3")
+		.join("model.safetensors"))
+}
+
+/// 获取 Large V3 权重分片列表。
+fn large_v3_weight_part_paths(model_directory: &Path) -> Result<Vec<PathBuf>, DeepLearningError> {
+	let mut part_paths = std::fs::read_dir(model_directory)?
+		.filter_map(Result::ok)
+		.map(|entry| entry.path())
+		.filter(|path| {
+			path.file_name()
+				.and_then(|file_name| file_name.to_str())
+				.map(|file_name| file_name.starts_with("model.safetensors.part"))
+				.unwrap_or(false)
+		})
+		.collect::<Vec<_>>();
+	part_paths.sort();
+
+	if part_paths.is_empty() {
+		return Err(DeepLearningError::ModelFileMissing {
+			path: model_directory.join("model.safetensors"),
+		});
+	}
+
+	Ok(part_paths)
+}
+
+/// 将 Large V3 权重分片组装到用户本地缓存目录。
+fn assemble_large_v3_weights_from_parts(
+	model_directory: &Path,
+	target_path: &Path,
+) -> Result<(), DeepLearningError> {
+	let part_paths = large_v3_weight_part_paths(model_directory)?;
+	let parent_dir = target_path
+		.parent()
+		.ok_or_else(|| DeepLearningError::ModelLoadFailed {
+			message: format!("Large V3 缓存路径无效: {}", target_path.display()),
+		})?;
+	std::fs::create_dir_all(parent_dir)?;
+
+	let mut target_file = File::create(target_path)?;
+	for part_path in part_paths {
+		let mut part_file = File::open(&part_path)?;
+		io::copy(&mut part_file, &mut target_file)?;
+	}
+
+	Ok(())
 }
 
 /// 构建 Whisper 任务快照输出路径。
@@ -1010,7 +1093,6 @@ fn missing_model_directory_hint(
 
 /// 校验 Whisper 运行最小所需文件。
 fn ensure_whisper_support_files_exist(paths: &WhisperModelPaths) -> Result<(), DeepLearningError> {
-	ensure_model_weights_exist(&paths.weights)?;
 	ensure_file_exists(&paths.config)?;
 	ensure_file_exists(&paths.generation_config)?;
 	ensure_file_exists(&paths.preprocessor_config)?;

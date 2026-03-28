@@ -1,0 +1,82 @@
+{
+  "whisper_base_assets": {
+    "version": "2026-03-27",
+    "archives": [
+      {
+        "file_name": "whisper-base-assets-2026-03-27.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/whisper-base-assets-2026-03-27.zip",
+        "sha256": "c618476b7aaf83fb707daddec8724a2e5f409064293db584fa83043c87318333"
+      }
+    ],
+    "layout": {
+      "whisper_base_dir": "whisper_base"
+    }
+  },
+  "whisper_large_v3_assets": {
+    "version": "2026-03-27",
+    "archives": [
+      {
+        "file_name": "whisper-large-v3-files-2026-03-27.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/whisper-large-v3-files-2026-03-27.zip",
+        "sha256": "a1df39001eff18885859629fc59918747fd976dfc95b04ac18ea4a2333326fa3"
+      }
+    ],
+    "parts": [
+      {
+        "sequence": 1,
+        "file_name": "whisper-large-v3-model.part01",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/whisper-large-v3-model.part01",
+        "sha256": "5310d397907d16b69f1ce738b7e8d23e3f99ef108c1431356f1a7209fcce408c"
+      },
+      {
+        "sequence": 2,
+        "file_name": "whisper-large-v3-model.part02",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/whisper-large-v3-model.part02",
+        "sha256": "d47f3d4580c425c07ae06574a75acfaa4563cd51411265331a0e8bdacdaf3c18"
+      }
+    ],
+    "assembled_file": {
+      "target_path": "whisper/whisper-large-v3/model.safetensors",
+      "sha256": "a8e94b85976e5864ba3e9525c7e6c83b2a1eca42d4b797a0c7c24d778e40fd95"
+    },
+    "layout": {
+      "whisper_large_v3_dir": "whisper/whisper-large-v3"
+    }
+  },
+  "cuda_runtime": {
+    "version": "13.0",
+    "archives": [
+      {
+        "file_name": "cuda-runtime-13.0.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/cuda-runtime-13.0.zip",
+        "sha256": "3a717e59e1b56372e19a27f4d6e8a4140bfd624c857e41922cc6cfeedee7ec58"
+      }
+    ],
+    "layout": {
+      "cuda_bin_dir": "cuda-runtime/bin"
+    }
+  },
+  "gstreamer_runtime": {
+    "version": "1.26.9",
+    "archives": [
+      {
+        "file_name": "gstreamer-runtime-bin-1.26.9.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/gstreamer-runtime-bin-1.26.9.zip",
+        "sha256": "f18b4ea1e89a03c24a42d100b5cabdb8046c9b0cd1b24740db73bdf73cb601d7"
+      },
+      {
+        "file_name": "gstreamer-runtime-plugins-1.26.9.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/gstreamer-runtime-plugins-1.26.9.zip",
+        "sha256": "0d7c15401310c0a96537ad72181d3cad3579586300b68a2dbfe6f4aa1623c7ec"
+      },
+      {
+        "file_name": "gstreamer-runtime-libexec-1.26.9.zip",
+        "url": "https://github.com/slc90/rust_packages_survey/releases/download/installer-assets-2026-03-27/gstreamer-runtime-libexec-1.26.9.zip",
+        "sha256": "09ccfde8faaab49ad379d11c0f91b086483c08373aa7e533c30ab06a54467dd5"
+      }
+    ],
+    "layout": {
+      "runtime_root_dir": "gstreamer-runtime"
+    }
+  }
+}

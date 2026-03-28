@@ -24,6 +24,15 @@ param(
 	# CUDA 运行时 DLL 所在目录。
 	[string]$CudaBinRoot = "",
 
+	# Whisper Base 模型目录。
+	[string]$WhisperBaseModelRoot = "",
+
+	# Whisper Large V3 模型目录。
+	[string]$WhisperLargeV3ModelRoot = "",
+
+	# Whisper Large V3 模型分片目录。
+	[string]$WhisperLargeV3PartsRoot = "",
+
 	# 是否跳过 cargo release 构建。
 	[switch]$SkipCargoBuild,
 
@@ -169,6 +178,61 @@ function Resolve-CudaBinRoot {
 	throw "请通过 installer\local_paths.ps1、-CudaBinRoot 或环境变量 CUDA_PATH 提供 CUDA 运行时 DLL 目录"
 }
 
+# 解析 Whisper Base 模型目录。
+#
+# 优先级依次为：
+# 1. 命令行参数
+# 2. installer/local_paths.ps1
+# 3. 工作区默认目录
+function Resolve-WhisperBaseModelRoot {
+	param(
+		[string]$ResolvedWorkspaceRoot,
+		[string]$RequestedWhisperBaseModelRoot,
+		[hashtable]$InstallerLocalPaths
+	)
+
+	if (-not [string]::IsNullOrWhiteSpace($RequestedWhisperBaseModelRoot)) {
+		return (Resolve-Path $RequestedWhisperBaseModelRoot).Path
+	}
+
+	$configuredPath = $InstallerLocalPaths["WhisperBaseModelRoot"]
+	if (-not [string]::IsNullOrWhiteSpace($configuredPath)) {
+		return (Resolve-Path $configuredPath).Path
+	}
+
+	return (Join-Path $ResolvedWorkspaceRoot "deepl_models\whisper_base")
+}
+
+# 解析 Whisper Large V3 模型目录。
+#
+# 优先级依次为：
+# 1. 命令行参数
+# 2. installer/local_paths.ps1
+# 3. 工作区默认目录
+function Resolve-WhisperLargeV3ModelRoot {
+	param(
+		[string]$ResolvedWorkspaceRoot,
+		[string]$RequestedWhisperLargeV3ModelRoot,
+		[hashtable]$InstallerLocalPaths
+	)
+
+	if (-not [string]::IsNullOrWhiteSpace($RequestedWhisperLargeV3ModelRoot)) {
+		return (Resolve-Path $RequestedWhisperLargeV3ModelRoot).Path
+	}
+
+	$configuredPath = $InstallerLocalPaths["WhisperLargeV3ModelRoot"]
+	if (-not [string]::IsNullOrWhiteSpace($configuredPath)) {
+		return (Resolve-Path $configuredPath).Path
+	}
+
+	$preferredLargeV3Root = Join-Path $ResolvedWorkspaceRoot "deepl_models\whisper\whisper-large-v3"
+	if (Test-Path $preferredLargeV3Root) {
+		return $preferredLargeV3Root
+	}
+
+	return (Join-Path $ResolvedWorkspaceRoot "deepl_models\whisper")
+}
+
 # 清理并重建目标目录，保证每次打包从干净目录开始。
 function New-CleanDirectory {
 	param([string]$Path)
@@ -263,6 +327,8 @@ $resolvedOutputRoot = Get-NormalizedPath -ResolvedWorkspaceRoot $resolvedWorkspa
 $installerLocalPaths = Get-InstallerLocalPaths -ResolvedWorkspaceRoot $resolvedWorkspaceRoot
 $resolvedGStreamerRoot = Resolve-GStreamerRoot -RequestedGStreamerRoot $GStreamerRoot -InstallerLocalPaths $installerLocalPaths
 $resolvedCudaBinRoot = Resolve-CudaBinRoot -RequestedCudaBinRoot $CudaBinRoot -InstallerLocalPaths $installerLocalPaths
+$resolvedWhisperBaseModelRoot = Resolve-WhisperBaseModelRoot -ResolvedWorkspaceRoot $resolvedWorkspaceRoot -RequestedWhisperBaseModelRoot $WhisperBaseModelRoot -InstallerLocalPaths $installerLocalPaths
+$resolvedWhisperLargeV3ModelRoot = Resolve-WhisperLargeV3ModelRoot -ResolvedWorkspaceRoot $resolvedWorkspaceRoot -RequestedWhisperLargeV3ModelRoot $WhisperLargeV3ModelRoot -InstallerLocalPaths $installerLocalPaths
 
 # 准备干净的输出目录，并按需构建 release 可执行文件。
 Assert-WixCommandAvailable
@@ -285,6 +351,9 @@ Invoke-ChildScript -ScriptPath (Join-Path $PSScriptRoot "prepare_runtime.ps1") -
 Invoke-ChildScript -ScriptPath (Join-Path $PSScriptRoot "prepare_models.ps1") -Parameters @{
 	WorkspaceRoot = $resolvedWorkspaceRoot
 	StageRoot = $resolvedStageRoot
+	WhisperBaseModelRoot = $resolvedWhisperBaseModelRoot
+	WhisperLargeV3ModelRoot = $resolvedWhisperLargeV3ModelRoot
+	WhisperLargeV3PartsRoot = $WhisperLargeV3PartsRoot
 }
 Invoke-ChildScript -ScriptPath (Join-Path $PSScriptRoot "prepare_cuda_runtime.ps1") -Parameters @{
 	WorkspaceRoot = $resolvedWorkspaceRoot

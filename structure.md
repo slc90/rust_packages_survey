@@ -18,6 +18,7 @@ rust_packages_survey/
 │   ├── requirements.md                     # 功能需求列表
 │   ├── setting_implementation.md           # 设置页面实现方案
 │   ├── title_bar_implementation.md         # 标题栏实现文档
+│   ├── 自动安装包发布方案.md               # 版本提升后自动产出安装包的发布方案
 │   └── unresolved_issues.md                # 遗留问题记录
 ├── edf_io/                                 # EDF/BDF 文件读写库crate
 │   ├── Cargo.toml
@@ -59,10 +60,12 @@ rust_packages_survey/
 │   ├── manifests/                          # 安装资源整理清单
 │   │   ├── cuda_runtime_dlls.txt           # CUDA 运行时 DLL 匹配清单
 │   │   ├── gstreamer_runtime_roots.txt     # GStreamer 运行时目录清单
+│   │   ├── release_assets.json             # 预制安装资源包清单
 │   │   ├── whisper_base_required_files.txt # Whisper Base 必需模型文件清单
 │   │   └── whisper_large_v3_required_files.txt # Whisper Large V3 必需模型文件清单
 │   ├── scripts/                            # 安装包构建脚本
 │   │   ├── build_installer.ps1             # 安装包 staging 和 MSI 构建脚本
+│   │   ├── fetch_release_assets.ps1        # 预制安装资源包下载与解压脚本
 │   │   ├── prepare_cuda_runtime.ps1        # CUDA 运行时整理脚本
 │   │   ├── prepare_models.ps1              # Whisper 模型整理脚本（Base + Large V3）
 │   │   └── prepare_runtime.ps1             # GStreamer 运行时整理脚本
