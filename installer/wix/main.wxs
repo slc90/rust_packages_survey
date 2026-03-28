@@ -5,7 +5,7 @@
 	<Package
 		Name="Rust Packages Survey"
 		Language="1033"
-		Version="0.1.11"
+		Version="0.1.12"
 		Manufacturer="Rust Packages Survey"
 		UpgradeCode="8E1A120D-3A1E-4B53-BD79-1A1BC830A0F4"
 		Scope="perMachine">
