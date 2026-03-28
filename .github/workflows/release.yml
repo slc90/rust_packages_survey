@@ -109,6 +109,11 @@ jobs:
           dotnet tool install --global wix --version 5.0.2
           "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+      - name: Build CUDA release binary
+        shell: pwsh
+        run: |
+          cargo build -p entry --release --features cuda --verbose
+
       - name: Build MSI
         shell: pwsh
         run: |
@@ -119,7 +124,8 @@ jobs:
             -CudaBinRoot $resolvedAssets.cuda_runtime.layout.cuda_bin_dir `
             -WhisperBaseModelRoot $resolvedAssets.whisper_base_assets.layout.whisper_base_dir `
             -WhisperLargeV3ModelRoot $resolvedAssets.whisper_large_v3_assets.layout.whisper_large_v3_dir `
-            -WhisperLargeV3PartsRoot (Join-Path $PWD 'installer\downloaded_assets\whisper_large_v3_assets\parts')
+            -WhisperLargeV3PartsRoot (Join-Path $PWD 'installer\downloaded_assets\whisper_large_v3_assets\parts') `
+            -SkipCargoBuild
 
           $version = '${{ steps.extract_version.outputs.version }}'
           $sourceMsi = Join-Path $PWD 'installer\dist\rust_packages_survey.msi'
@@ -193,7 +199,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/*.msi
-            artifacts/*.cab
-            artifacts/SHA256SUMS.txt
-            artifacts/entry.exe
+            artifacts/installer/dist/*.msi
+            artifacts/installer/dist/*.cab
+            artifacts/installer/dist/SHA256SUMS.txt
+            artifacts/target/release/entry.exe
