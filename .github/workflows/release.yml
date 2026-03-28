@@ -11,7 +11,7 @@ env:
   RUST_BACKTRACE: "full"
   RUSTFLAGS: "-Dwarnings"
   GSTREAMER_VERSION: "1.26.9"
-  CUDA_TOOLKIT_VERSION: "13.0.2"
+  CUDA_TOOLKIT_VERSION: "13.0.0"
 
 jobs:
   verify:
@@ -121,10 +121,13 @@ jobs:
         run: |
           Write-Host "CUDA_PATH: $env:CUDA_PATH"
           Write-Host "Action CUDA_PATH: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}"
+          Write-Host "CUDA_COMPUTE_CAP: 89"
           nvcc -V
 
       - name: Build CUDA release binary
         shell: pwsh
+        env:
+          CUDA_COMPUTE_CAP: "89"
         run: |
           cargo build -p entry --release --features cuda --verbose
 
