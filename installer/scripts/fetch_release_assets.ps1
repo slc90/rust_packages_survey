@@ -71,7 +71,7 @@ function Download-RemoteFile {
 		Remove-Item -Path $OutputPath -Force
 	}
 
-	Write-Host "下载 $ItemName: $Url"
+	Write-Host "下载 ${ItemName}: $Url"
 	Invoke-WebRequest -Uri $Url -OutFile $OutputPath
 }
 
